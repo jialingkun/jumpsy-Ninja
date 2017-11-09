@@ -59,6 +59,7 @@ public class Game_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		
 		if (Mathf.Abs(playerTransform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
 			velocity.x = 0;
 			velocity.y = rigid.velocity.y;
