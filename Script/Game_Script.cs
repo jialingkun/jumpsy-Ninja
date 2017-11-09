@@ -90,7 +90,7 @@ public class Game_Script : MonoBehaviour {
 		initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(angle) + yOffset));
 
 		velocity.x = initialVelocity * Mathf.Cos (angle) * direction; //direction -1 left, 1 right
-		velocity.y = initialVelocity * Mathf.Sin (angle) * 1;
+		velocity.y = initialVelocity * Mathf.Sin (angle) * 1; // 1 up
 
 
 
@@ -98,10 +98,14 @@ public class Game_Script : MonoBehaviour {
 		currentPoint = currentPoint + direction;
 		if (currentPoint > 4) {
 			currentPoint = 4;
+			isStopped = true; //So it can still jump to wall
 		} else if (currentPoint < 0) {
 			currentPoint = 0;
+			isStopped = true; //So it can still jump to wall
+		} else {
+			isStopped = false;
 		}
-		isStopped = false;
+
 
 		//execute jump
 		rigid.velocity = velocity;
