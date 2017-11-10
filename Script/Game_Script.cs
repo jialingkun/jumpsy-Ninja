@@ -11,6 +11,8 @@ public class Game_Script : MonoBehaviour {
 	private Transform targetLeft;
 	private Rigidbody2D rigid;
 	private float gravity;
+	[HideInInspector]
+	public bool isGrounded;
 	//reusable variable
 	private Vector2 targetPosition;
 	private Vector2 planarTarget;
@@ -22,6 +24,7 @@ public class Game_Script : MonoBehaviour {
 	//jump angle
 	public float initialAngle;
 	private float angle;
+	private float tempAngle;
 
 	//Stopping Point
 	private float[] point;
@@ -32,6 +35,7 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		isGrounded = true;
 		//jump
 		player = GameObject.Find("Player");
 		playerTransform = player.transform;
@@ -59,21 +63,57 @@ public class Game_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
-		if (Mathf.Abs(playerTransform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
-			velocity.x = 0;
-			velocity.y = rigid.velocity.y;
-			rigid.velocity = velocity;
-			isStopped = true;
+		if (currentPoint>=0 && currentPoint<=4) {
+			if (Mathf.Abs(playerTransform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
+				velocity.x = 0;
+				velocity.y = rigid.velocity.y;
+				rigid.velocity = velocity;
+				isStopped = true;
 
-			print ("STOP");
+				print ("STOP");
+			}
 		}
+
 		
 	}
 
 	public void clickJump(int direction){
 		//direction -1 left, 1 right
 
+		if (isGrounded) {
+			//parabola jump algorithm
+			targetPosition = targetLeft.position;
+
+			// Positions of this object and the target on the same plane
+			planarTarget.x = targetPosition.x;
+			planarPosition.x = player.transform.position.x;
+
+			// Planar distance between objects
+			distance = Vector2.Distance(planarTarget, planarPosition);
+
+			// Distance along the y axis between objects
+			yOffset = player.transform.position.y - targetPosition.y;
+
+			initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(angle) + yOffset));
+
+			velocity.x = initialVelocity * Mathf.Cos (angle) * direction; //direction -1 left, 1 right
+			velocity.y = initialVelocity * Mathf.Sin (angle) * 1; // 1 up
+
+
+
+			//point change
+			currentPoint = currentPoint + direction;
+			isStopped = false;
+
+
+			//execute jump
+			rigid.velocity = velocity;
+			isGrounded = false;
+		}
+	}
+
+	public void wallBounce(int direction){
+		//direction -1 left, 1 right
 
 		//parabola jump algorithm
 		targetPosition = targetLeft.position;
@@ -86,30 +126,25 @@ public class Game_Script : MonoBehaviour {
 		distance = Vector2.Distance(planarTarget, planarPosition);
 
 		// Distance along the y axis between objects
-		yOffset = player.transform.position.y - targetPosition.y;
+		yOffset = player.transform.position.y - targetPosition.y/4; //half height
 
-		initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(angle) + yOffset));
+		tempAngle = 45; //unparabolic angle
 
-		velocity.x = initialVelocity * Mathf.Cos (angle) * direction; //direction -1 left, 1 right
-		velocity.y = initialVelocity * Mathf.Sin (angle) * 1; // 1 up
+		initialVelocity = (1 / Mathf.Cos(tempAngle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(tempAngle) + yOffset));
+
+		velocity.x = initialVelocity * Mathf.Cos (tempAngle) * direction; //direction -1 left, 1 right
+		velocity.y = initialVelocity * Mathf.Sin (tempAngle) * 1; // 1 up
 
 
 
-		//point change
+		//point change (From 5 to 4 or from -1 to 0)
 		currentPoint = currentPoint + direction;
-		if (currentPoint > 4) {
-			currentPoint = 4;
-			isStopped = true; //So it can still jump to wall
-		} else if (currentPoint < 0) {
-			currentPoint = 0;
-			isStopped = true; //So it can still jump to wall
-		} else {
-			isStopped = false;
-		}
+		isStopped = false;
 
 
 		//execute jump
 		rigid.velocity = velocity;
+		isGrounded = false;
 	}
 
 
