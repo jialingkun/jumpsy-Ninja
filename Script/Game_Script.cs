@@ -8,7 +8,8 @@ public class Game_Script : MonoBehaviour {
 	//jump
 	private GameObject player;
 	private Transform playerTransform;
-	private Transform targetLeft;
+	private Transform targetRange;
+	private Transform BounceRange;
 	private Rigidbody2D rigid;
 	private float gravity;
 	[HideInInspector]
@@ -24,7 +25,8 @@ public class Game_Script : MonoBehaviour {
 	//jump angle
 	public float initialAngle;
 	private float angle;
-	private float tempAngle;
+	public float bounceAngle;
+	private float tempBounceAngle;
 
 	//Stopping Point
 	private float[] point;
@@ -39,11 +41,13 @@ public class Game_Script : MonoBehaviour {
 		//jump
 		player = GameObject.Find("Player");
 		playerTransform = player.transform;
-		targetLeft = GameObject.Find ("TargetRange").transform;
+		targetRange = GameObject.Find ("TargetRange").transform;
+		BounceRange = GameObject.Find ("BounceRange").transform;
 		rigid = player.GetComponent<Rigidbody2D>();
 		gravity = Physics.gravity.magnitude * rigid.gravityScale;
 		// Selected angle in radians
 		angle = initialAngle * Mathf.Deg2Rad;
+		tempBounceAngle = bounceAngle * Mathf.Deg2Rad;
 		// intialize only
 		planarTarget = new Vector2(0, 0);
 		planarPosition = new Vector2(0, 0);
@@ -82,7 +86,7 @@ public class Game_Script : MonoBehaviour {
 
 		if (isGrounded) {
 			//parabola jump algorithm
-			targetPosition = targetLeft.position;
+			targetPosition = targetRange.position;
 
 			// Positions of this object and the target on the same plane
 			planarTarget.x = targetPosition.x;
@@ -116,24 +120,22 @@ public class Game_Script : MonoBehaviour {
 		//direction -1 left, 1 right
 
 		//parabola jump algorithm
-		targetPosition = targetLeft.position;
+		targetPosition = BounceRange.position;
 
 		// Positions of this object and the target on the same plane
-		planarTarget.x = targetPosition.x;
+		planarTarget.x = targetPosition.x; //half distance
 		planarPosition.x = player.transform.position.x;
 
 		// Planar distance between objects
 		distance = Vector2.Distance(planarTarget, planarPosition);
 
 		// Distance along the y axis between objects
-		yOffset = player.transform.position.y - targetPosition.y/4; //half height
+		yOffset = player.transform.position.y - targetPosition.y; //half height
 
-		tempAngle = 45; //unparabolic angle
+		initialVelocity = (1 / Mathf.Cos(tempBounceAngle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(tempBounceAngle) + yOffset));
 
-		initialVelocity = (1 / Mathf.Cos(tempAngle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(distance, 2)) / (distance * Mathf.Tan(tempAngle) + yOffset));
-
-		velocity.x = initialVelocity * Mathf.Cos (tempAngle) * direction; //direction -1 left, 1 right
-		velocity.y = initialVelocity * Mathf.Sin (tempAngle) * 1; // 1 up
+		velocity.x = initialVelocity * Mathf.Cos (tempBounceAngle) * direction; //direction -1 left, 1 right
+		velocity.y = initialVelocity * Mathf.Sin (tempBounceAngle) * 1; // 1 up
 
 
 
