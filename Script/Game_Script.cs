@@ -14,6 +14,7 @@ public class Game_Script : MonoBehaviour {
 	private float gravity;
 	[HideInInspector]
 	public bool isGrounded;
+
 	//reusable variable
 	private Vector2 targetPosition;
 	private Vector2 planarTarget;
@@ -22,6 +23,7 @@ public class Game_Script : MonoBehaviour {
 	private float yOffset;
 	private float initialVelocity;
 	private Vector2 velocity;
+
 	//jump angle
 	public float initialAngle;
 	private float angle;
@@ -32,6 +34,12 @@ public class Game_Script : MonoBehaviour {
 	private float[] point;
 	private int currentPoint;
 	private bool isStopped;
+
+	//Moving camera
+	private GameObject cameraObject;
+	private Vector3 cameraPosition;
+	private GameObject movingLine;
+	public float CameraMoveSpeed;
 
 
 
@@ -63,19 +71,29 @@ public class Game_Script : MonoBehaviour {
 		currentPoint = 1;
 		isStopped = true;
 
+		//moving camera
+		cameraObject = GameObject.Find("Camera");
+		cameraPosition = cameraObject.transform.position;
+		movingLine = GameObject.Find("CameraMovingLine");
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
+		//stopping point
 		if (currentPoint>=0 && currentPoint<=4) {
 			if (Mathf.Abs(playerTransform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
 				velocity.x = 0;
 				velocity.y = rigid.velocity.y;
 				rigid.velocity = velocity;
 				isStopped = true;
-
-				print ("STOP");
 			}
+		}
+
+		//Moving camera
+		if (movingLine.transform.position.y > cameraPosition.y) {
+			cameraPosition.y = Mathf.Lerp (cameraPosition.y, movingLine.transform.position.y, Time.deltaTime * CameraMoveSpeed);
+			cameraObject.transform.position = cameraPosition;
 		}
 
 		
