@@ -12,11 +12,13 @@ public class Player_Script : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D coll){
 		if (coll.gameObject.name.StartsWith ("Platform")) {
-			game.isGrounded = true;
+			game.groundCheck ();
 		} else if (coll.gameObject.name.StartsWith ("WallLeft")) {
 			game.wallBounce (1); //bounce right
 		} else if (coll.gameObject.name.StartsWith ("WallRight")) {
 			game.wallBounce (-1); //bounce left
+		} else{
+			game.gameover ();
 		}
 	}
 
