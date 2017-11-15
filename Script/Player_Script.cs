@@ -17,13 +17,19 @@ public class Player_Script : MonoBehaviour {
 			game.wallBounce (1); //bounce right
 		} else if (coll.gameObject.name.StartsWith ("WallRight")) {
 			game.wallBounce (-1); //bounce left
+		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
+			game.groundCheck ();
+			game.platformBounce ();
 		} else{
 			game.gameover ();
 		}
 	}
 
-	/*void OnTriggerEnter2D(Collider2D coll){
-		if (coll.name.StartsWith ("Food")) {
+	void OnTriggerEnter2D(Collider2D coll){
+		if (coll.name.StartsWith ("Coin")) {
+			Destroy (coll.gameObject);
+			game.getCoin ();
+
 		}
-	}*/
+	}
 }

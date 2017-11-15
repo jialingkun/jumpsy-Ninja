@@ -11,9 +11,8 @@ public class Game_Script : MonoBehaviour {
 	private Transform BounceRange;
 	private Rigidbody2D rigid;
 	private float gravity;
-	[HideInInspector]
-	public bool isGrounded;
-
+	private bool isGrounded;
+	private int lastDirection;
 	//reusable variable
 	private Vector2 targetPosition;
 	private Vector2 planarTarget;
@@ -22,7 +21,6 @@ public class Game_Script : MonoBehaviour {
 	private float yOffset;
 	private float initialVelocity;
 	private Vector2 velocity;
-
 	//jump angle
 	public float initialAngle;
 	private float angle;
@@ -66,6 +64,18 @@ public class Game_Script : MonoBehaviour {
 	private Vector2 playerInitialPosition;
 	public GameObject stageInitialPrefab;
 
+	//score and coin
+	private int score;
+	private int bestscore;
+	private int currentCoin;
+	private int collectedCoin;
+	private Text gameplayScoreText;
+	private Text gameplayBestScoreText;
+	private Text gameplayCoinText;
+	//get coin
+	private bool isGettingCoin;
+
+
 
 
 
@@ -78,6 +88,7 @@ public class Game_Script : MonoBehaviour {
 		BounceRange = GameObject.Find ("BounceRange").transform;
 		rigid = player.GetComponent<Rigidbody2D>();
 		gravity = Physics.gravity.magnitude * rigid.gravityScale;
+		lastDirection = 1; //initialize only
 		// Selected angle in radians
 		angle = initialAngle * Mathf.Deg2Rad;
 		tempBounceAngle = bounceAngle * Mathf.Deg2Rad;
@@ -121,10 +132,31 @@ public class Game_Script : MonoBehaviour {
 		cameraInitialPosition = cameraObject.transform.position;
 		playerInitialPosition = player.transform.position;
 
+		//score text
+		gameplayScoreText = GameObject.Find("CurrentScore").GetComponent<Text>();
+		gameplayBestScoreText = GameObject.Find("CurrentBestScore").GetComponent<Text>();
+		gameplayCoinText = GameObject.Find("CurrentCoin").GetComponent<Text>();
+		//score and coin value
+		score = 0;
+		bestscore = PlayerPrefs.GetInt("bestscore",0);
+		currentCoin = 0;
+		collectedCoin = PlayerPrefs.GetInt("coin",0);
+		//update score text
+		gameplayScoreText.text = "SCORE : "+score;
+		gameplayBestScoreText.text = "BEST : "+bestscore;
+		gameplayCoinText.text = "" + currentCoin;
+		//get coin
+		isGettingCoin = false;
+
 	}
+
+
+
+
+
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		//stopping point
 		if (currentPoint>=0 && currentPoint<=4) {
 			if (Mathf.Abs(player.transform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
@@ -139,7 +171,6 @@ public class Game_Script : MonoBehaviour {
 		if (movingLine.transform.position.y > cameraPosition.y) {
 			cameraPosition.y = Mathf.Lerp (cameraPosition.y, movingLine.transform.position.y, Time.deltaTime * CameraMoveSpeed);
 			cameraObject.transform.position = cameraPosition;
-			print(cameraPosition.y);
 		}
 
 		//chasing Camera
@@ -152,10 +183,26 @@ public class Game_Script : MonoBehaviour {
 
 		}
 
+		//update score label
+		score = Mathf.RoundToInt(cameraPosition.y);
+		gameplayScoreText.text = "SCORE : "+score;
+
+		//get coin
+		if (isGettingCoin) {
+			currentCoin = currentCoin + 1;
+			gameplayCoinText.text = "" + currentCoin;
+			isGettingCoin = false;
+		}
 		
 	}
 
 	public void gameover(){
+		//best score
+		if (score>bestscore) {
+			PlayerPrefs.SetInt("bestscore", score);
+			bestscore = score;
+			//newBestScoreText.SetActive(true);
+		}
 		refresh ();
 	}
 
@@ -193,6 +240,17 @@ public class Game_Script : MonoBehaviour {
 		//restart initial parameter
 		cameraInitialPosition = cameraObject.transform.position;
 		playerInitialPosition = player.transform.position;
+
+		//score and coin value
+		score = 0;
+		bestscore = PlayerPrefs.GetInt("bestscore",0);
+		currentCoin = 0;
+		//update score text
+		gameplayScoreText.text = "SCORE : "+score;
+		gameplayBestScoreText.text = "BEST : "+bestscore;
+		gameplayCoinText.text = "" + currentCoin;
+		//get coin
+		isGettingCoin = false;
 	}
 
 	public void spawnStages(){
@@ -257,6 +315,9 @@ public class Game_Script : MonoBehaviour {
 			if (!firstJump) {
 				firstJump = true;
 			}
+
+			//update last direction
+			lastDirection = direction;
 		}
 	}
 
@@ -266,6 +327,15 @@ public class Game_Script : MonoBehaviour {
 		}
 	}
 
+	public void getCoin(){
+		isGettingCoin = true;
+	}
+
+
+
+
+
+	//Platform variation
 	public void wallBounce(int direction){
 		//direction -1 left, 1 right
 
@@ -297,6 +367,13 @@ public class Game_Script : MonoBehaviour {
 		//execute jump
 		rigid.velocity = velocity;
 		isGrounded = false;
+
+		//update last direction
+		lastDirection = direction;
+	}
+
+	public void platformBounce(){
+		clickJump (lastDirection);
 	}
 
 
