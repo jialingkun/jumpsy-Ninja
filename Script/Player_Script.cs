@@ -13,14 +13,22 @@ public class Player_Script : MonoBehaviour {
 	void OnCollisionEnter2D(Collision2D coll){
 		if (coll.gameObject.name.StartsWith ("Platform")) {
 			game.groundCheck ();
+		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
+			game.groundCheck ();
+			game.platformBounce ();
+		} else if (coll.gameObject.name.StartsWith ("WeakPlatform")) {
+			game.weakGroundCheck (coll.gameObject);
 		} else if (coll.gameObject.name.StartsWith ("WallLeft")) {
 			game.wallBounce (1); //bounce right
 		} else if (coll.gameObject.name.StartsWith ("WallRight")) {
 			game.wallBounce (-1); //bounce left
-		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
-			game.groundCheck ();
-			game.platformBounce ();
-		} else{
+		} else if (coll.gameObject.name.StartsWith ("WeakWallLeft")) {
+			game.wallBounce (1); //bounce right
+			Destroy(coll.transform.parent.gameObject);
+		} else if (coll.gameObject.name.StartsWith ("WeakWallRight")) {
+			game.wallBounce (-1); //bounce left
+			Destroy(coll.transform.parent.gameObject);
+		}  else{
 			game.gameover ();
 		}
 	}

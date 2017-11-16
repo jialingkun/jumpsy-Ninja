@@ -75,6 +75,11 @@ public class Game_Script : MonoBehaviour {
 	//get coin
 	private bool isGettingCoin;
 
+	//weak platform
+	public float weakPlatformTime;
+	private bool isOnWeak;
+	private GameObject weakPlatform;
+
 
 
 
@@ -148,6 +153,9 @@ public class Game_Script : MonoBehaviour {
 		//get coin
 		isGettingCoin = false;
 
+		//weak platform
+		isOnWeak = false;
+
 	}
 
 
@@ -215,6 +223,7 @@ public class Game_Script : MonoBehaviour {
 
 		//return to initial position
 		cameraObject.transform.position = cameraInitialPosition;
+		rigid.velocity = Vector2.zero;
 		player.transform.position = playerInitialPosition;
 		//don't draw trail when going back
 		player.GetComponent<TrailRenderer>().Clear();
@@ -318,6 +327,11 @@ public class Game_Script : MonoBehaviour {
 
 			//update last direction
 			lastDirection = direction;
+
+			//destroy weak platform
+			if (isOnWeak) {
+				Destroy (weakPlatform);
+			}
 		}
 	}
 
@@ -374,6 +388,14 @@ public class Game_Script : MonoBehaviour {
 
 	public void platformBounce(){
 		clickJump (lastDirection);
+	}
+
+	public void weakGroundCheck(GameObject platform){
+		groundCheck ();
+		if (isGrounded) {
+			isOnWeak = true;
+			weakPlatform = platform;
+		}
 	}
 
 
