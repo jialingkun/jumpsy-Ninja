@@ -165,6 +165,14 @@ public class Game_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
+		//temporary keyboard control
+		if (Input.GetKey(KeyCode.RightArrow)) {
+			clickJump (1);
+		}else if (Input.GetKey(KeyCode.LeftArrow)) {
+			clickJump (-1);
+		}
+
+
 		//stopping point
 		if (currentPoint>=0 && currentPoint<=4) {
 			if (Mathf.Abs(player.transform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
@@ -182,14 +190,14 @@ public class Game_Script : MonoBehaviour {
 		}
 
 		//chasing Camera
-		if (firstJump) {
+		/*if (firstJump) {
 			cameraPosition.y = cameraPosition.y + Time.deltaTime * currentSpeed;
 			cameraObject.transform.position = cameraPosition;
 			if (currentSpeed<maxSpeed) {
 				currentSpeed = initialSpeed + cameraPosition.y * speedIncrement;
 			}
 
-		}
+		}*/
 
 		//update score label
 		score = Mathf.RoundToInt(cameraPosition.y);

@@ -11,14 +11,7 @@ public class Player_Script : MonoBehaviour {
 	}
 
 	void OnCollisionEnter2D(Collision2D coll){
-		if (coll.gameObject.name.StartsWith ("Platform")) {
-			game.groundCheck ();
-		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
-			game.groundCheck ();
-			game.platformBounce ();
-		} else if (coll.gameObject.name.StartsWith ("WeakPlatform")) {
-			game.weakGroundCheck (coll.gameObject);
-		} else if (coll.gameObject.name.StartsWith ("WallLeft")) {
+		if (coll.gameObject.name.StartsWith ("WallLeft")) {
 			game.wallBounce (1); //bounce right
 		} else if (coll.gameObject.name.StartsWith ("WallRight")) {
 			game.wallBounce (-1); //bounce left
@@ -28,7 +21,7 @@ public class Player_Script : MonoBehaviour {
 		} else if (coll.gameObject.name.StartsWith ("WeakWallRight")) {
 			game.wallBounce (-1); //bounce left
 			Destroy(coll.transform.parent.gameObject);
-		}  else{
+		}  else if (coll.gameObject.tag == "Enemy"){
 			game.gameover ();
 		}
 	}
@@ -37,7 +30,13 @@ public class Player_Script : MonoBehaviour {
 		if (coll.name.StartsWith ("Coin")) {
 			Destroy (coll.gameObject);
 			game.getCoin ();
-
+		} else if (coll.gameObject.name.StartsWith ("Platform")) {
+			game.groundCheck ();
+		} else if (coll.gameObject.name.StartsWith ("WeakPlatform")) {
+			game.weakGroundCheck (coll.gameObject);
+		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
+			game.groundCheck ();
+			game.platformBounce ();
 		}
 	}
 }
