@@ -17,12 +17,12 @@ public class Player_Script : MonoBehaviour {
 			game.wallBounce (-1); //bounce left
 		} else if (coll.gameObject.name.StartsWith ("WeakWallLeft")) {
 			game.wallBounce (1); //bounce right
+			print("Bounce Right");
 			Destroy(coll.transform.parent.gameObject);
 		} else if (coll.gameObject.name.StartsWith ("WeakWallRight")) {
 			game.wallBounce (-1); //bounce left
+			print("Bounce Left");
 			Destroy(coll.transform.parent.gameObject);
-		}  else if (coll.gameObject.tag == "Enemy"){
-			game.gameover ();
 		}
 	}
 
@@ -30,13 +30,15 @@ public class Player_Script : MonoBehaviour {
 		if (coll.name.StartsWith ("Coin")) {
 			Destroy (coll.gameObject);
 			game.getCoin ();
-		} else if (coll.gameObject.name.StartsWith ("Platform")) {
+		} else if (coll.name.StartsWith ("Platform")) {
 			game.groundCheck ();
-		} else if (coll.gameObject.name.StartsWith ("WeakPlatform")) {
+		} else if (coll.name.StartsWith ("WeakPlatform")) {
 			game.weakGroundCheck (coll.gameObject);
-		} else if (coll.gameObject.name.StartsWith ("BouncePlatform")) {
+		} else if (coll.name.StartsWith ("BouncePlatform")) {
 			game.groundCheck ();
 			game.platformBounce ();
+		} else if (coll.tag == "Enemy"){
+			game.gameover ();
 		}
 	}
 }

@@ -190,14 +190,14 @@ public class Game_Script : MonoBehaviour {
 		}
 
 		//chasing Camera
-		/*if (firstJump) {
+		if (firstJump) {
 			cameraPosition.y = cameraPosition.y + Time.deltaTime * currentSpeed;
 			cameraObject.transform.position = cameraPosition;
 			if (currentSpeed<maxSpeed) {
 				currentSpeed = initialSpeed + cameraPosition.y * speedIncrement;
 			}
 
-		}*/
+		}
 
 		//update score label
 		score = Mathf.RoundToInt(cameraPosition.y);
