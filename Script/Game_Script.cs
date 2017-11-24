@@ -5,6 +5,14 @@ using UnityEngine.UI;
 using System.IO;
 
 public class Game_Script : MonoBehaviour {
+
+	//UI Object
+	private GameObject playUI;
+	private GameObject gameoverUI;
+
+	//start parameter
+	private bool isPlaying;
+
 	//jump
 	private GameObject player;
 	private Transform targetRange;
@@ -43,6 +51,9 @@ public class Game_Script : MonoBehaviour {
 	public float currentSpeed;
 	public float speedIncrement;
 	public float maxSpeed;
+	//shaking camera
+	public float shakeMagnitude;
+	public float shakeDuration;
 
 
 	//Stage field
@@ -67,11 +78,15 @@ public class Game_Script : MonoBehaviour {
 	//score and coin
 	private int score;
 	private int bestscore;
-	private int currentCoin;
 	private int collectedCoin;
 	private Text gameplayScoreText;
 	private Text gameplayBestScoreText;
 	private Text gameplayCoinText;
+	//gameover scoring UI
+	private Text gameoverScoreText;
+	private Text gameoverBestscoreText;
+
+	private GameObject newBestScoreText;
 	//get coin
 	private bool isGettingCoin;
 
@@ -86,6 +101,15 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		//UI
+		playUI = GameObject.Find ("GamePlay");
+		gameoverUI = GameObject.Find ("GameOver");
+
+		//playing parameter
+		//isPlaying = false;
+		isPlaying = true; //temporary, without main menu
+
+
 		isGrounded = true;
 		//jump
 		player = GameObject.Find("Player");
@@ -109,7 +133,7 @@ public class Game_Script : MonoBehaviour {
 		point [2] = GameObject.Find ("Point3").transform.position.x;
 		point [3] = GameObject.Find ("Point4").transform.position.x;
 		point [4] = GameObject.Find ("Point5").transform.position.x;
-		currentPoint = 1;
+		currentPoint = 2;
 		isStopped = true;
 
 		//moving camera
@@ -140,21 +164,29 @@ public class Game_Script : MonoBehaviour {
 		//score text
 		gameplayScoreText = GameObject.Find("CurrentScore").GetComponent<Text>();
 		gameplayBestScoreText = GameObject.Find("CurrentBestScore").GetComponent<Text>();
-		gameplayCoinText = GameObject.Find("CurrentCoin").GetComponent<Text>();
+		gameplayCoinText = GameObject.Find("TotalCoin").GetComponent<Text>();
+
+		gameoverScoreText = GameObject.Find ("Score").GetComponent<Text>();
+		gameoverBestscoreText = GameObject.Find ("BestScore").GetComponent<Text>();
+		newBestScoreText = GameObject.Find ("NewBestScoreLabel");
+
 		//score and coin value
 		score = 0;
 		bestscore = PlayerPrefs.GetInt("bestscore",0);
-		currentCoin = 0;
 		collectedCoin = PlayerPrefs.GetInt("coin",0);
 		//update score text
 		gameplayScoreText.text = "SCORE : "+score;
 		gameplayBestScoreText.text = "BEST : "+bestscore;
-		gameplayCoinText.text = "" + currentCoin;
+		gameplayCoinText.text = "" + collectedCoin;
 		//get coin
 		isGettingCoin = false;
 
 		//weak platform
 		isOnWeak = false;
+
+		//Hide UI
+		//playUI.SetActive (false);
+		gameoverUI.SetActive (false);
 
 	}
 
@@ -165,64 +197,173 @@ public class Game_Script : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		//temporary keyboard control
-		if (Input.GetKey(KeyCode.RightArrow)) {
-			clickJump (1);
-		}else if (Input.GetKey(KeyCode.LeftArrow)) {
-			clickJump (-1);
-		}
 
 
-		//stopping point
-		if (currentPoint>=0 && currentPoint<=4) {
-			if (Mathf.Abs(player.transform.position.x-point [currentPoint]) < 0.05f && !isStopped) {
-				velocity.x = 0;
-				velocity.y = rigid.velocity.y;
-				rigid.velocity = velocity;
-				isStopped = true;
-			}
-		}
-
-		//Moving camera
-		if (movingLine.transform.position.y > cameraPosition.y) {
-			cameraPosition.y = Mathf.Lerp (cameraPosition.y, movingLine.transform.position.y, Time.deltaTime * CameraMoveSpeed);
-			cameraObject.transform.position = cameraPosition;
-		}
-
-		//chasing Camera
-		if (firstJump) {
-			cameraPosition.y = cameraPosition.y + Time.deltaTime * currentSpeed;
-			cameraObject.transform.position = cameraPosition;
-			if (currentSpeed<maxSpeed) {
-				currentSpeed = initialSpeed + cameraPosition.y * speedIncrement;
+		if (isPlaying) {
+			
+			//temporary keyboard control
+			if (Input.GetKey (KeyCode.RightArrow)) {
+				clickJump (1);
+			} else if (Input.GetKey (KeyCode.LeftArrow)) {
+				clickJump (-1);
 			}
 
-		}
 
-		//update score label
-		score = Mathf.RoundToInt(cameraPosition.y);
-		gameplayScoreText.text = "SCORE : "+score;
+			//stopping point
+			if (currentPoint >= 0 && currentPoint <= 4) {
+				if (Mathf.Abs (player.transform.position.x - point [currentPoint]) < 0.05f && !isStopped) {
+					velocity.x = 0;
+					velocity.y = rigid.velocity.y;
+					rigid.velocity = velocity;
+					isStopped = true;
+				}
+			}
 
-		//get coin
-		if (isGettingCoin) {
-			currentCoin = currentCoin + 1;
-			gameplayCoinText.text = "" + currentCoin;
-			isGettingCoin = false;
+			//Moving camera
+			if (movingLine.transform.position.y > cameraPosition.y) {
+				cameraPosition.y = Mathf.Lerp (cameraPosition.y, movingLine.transform.position.y, Time.deltaTime * CameraMoveSpeed);
+				cameraObject.transform.position = cameraPosition;
+			}
+
+			//chasing Camera
+			if (firstJump) {
+				cameraPosition.y = cameraPosition.y + Time.deltaTime * currentSpeed;
+				cameraObject.transform.position = cameraPosition;
+				if (currentSpeed < maxSpeed) {
+					currentSpeed = initialSpeed + cameraPosition.y * speedIncrement;
+				}
+
+			}
+
+			//update score label
+			score = Mathf.RoundToInt (cameraPosition.y);
+			gameplayScoreText.text = "SCORE : " + score;
+
+			//get coin
+			if (isGettingCoin) {
+				collectedCoin = collectedCoin + 1;
+				gameplayCoinText.text = "" + collectedCoin;
+				isGettingCoin = false;
+			}
+			
+		} else {
 		}
 		
 	}
 
-	public void gameover(){
-		//best score
-		if (score>bestscore) {
-			PlayerPrefs.SetInt("bestscore", score);
-			bestscore = score;
-			//newBestScoreText.SetActive(true);
+	IEnumerator Shake() {
+		Vector3 originalCamPos = cameraObject.transform.position;
+		Vector3 temporaryCamPos = new Vector3(0, 0, originalCamPos.z);
+		float elapsed = 0.0f;
+
+		float percentComplete;
+		float damper;
+
+		while (elapsed < shakeDuration) {
+			
+			elapsed += Time.deltaTime;          
+
+			percentComplete = elapsed / shakeDuration;         
+			damper = 1.0f - Mathf.Clamp(4.0f * percentComplete - 3.0f, 0.0f, 1.0f);
+
+			// map random value to [-1, 1]
+			temporaryCamPos.x = originalCamPos.x + (Random.value * 2.0f - 1.0f) * shakeMagnitude * damper;
+			temporaryCamPos.y = originalCamPos.y + (Random.value * 2.0f - 1.0f) * shakeMagnitude * damper;
+
+			cameraObject.transform.position = temporaryCamPos;
+
+			yield return null;
 		}
+
+		cameraObject.transform.position = originalCamPos;
+	}
+
+	public void gameover(){
+		
+		if (isPlaying) {
+			//SEaudioSource.PlayOneShot (deathSound, 0.6f);
+			isPlaying = false;
+			//hide player
+			player.SetActive (false);
+			//shake
+			StartCoroutine (Shake ());
+
+
+
+			firstJump = false;
+			playUI.SetActive (false);
+			gameoverUI.SetActive (true);
+			//pauseUI.SetActive (false);
+
+			/*if (reviveState) {
+				reviveButton.SetActive (false);
+			} else {
+				reviveButton.SetActive (true);
+			}*/
+
+
+			newBestScoreText.SetActive (false);
+
+			//collected coin
+			PlayerPrefs.SetInt ("coin", collectedCoin);
+			//collectedFoodTextMenu.text = "" + collectedFood;
+
+			//best score
+			if (score>bestscore) {
+				PlayerPrefs.SetInt("bestscore", score);
+				bestscore = score;
+				newBestScoreText.SetActive(true);
+			}
+			gameoverScoreText.text = "" + score;
+			gameoverBestscoreText.text = "" + bestscore;
+
+
+			//ads.addInterstitialCounter ();
+			//addScoreToLeaderBoard (bestscore);
+		}
+	}
+
+	public void clickStart(){
+
+		//menuUI.SetActive (false);
+		/*if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
+			PlayerPrefs.SetInt ("firstTime", 1);
+			clickHowTo ();
+		} else if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
+			playSelectSound ();
+			tutorialUI.SetActive (true);
+			tutorialEnd.SetActive (false);
+			tutorialLeft.SetActive (false);
+			tutorialRight.SetActive (false);
+			tutorialControl.SetActive (false);
+			currentScoreText.text = "" + score;
+			isPlaying = true;
+			lastMoveTime = Time.time + snakeSpeed;
+		} else {
+			playSelectSound ();
+			playUI.SetActive (true);
+			currentScoreText.text = "" + score;
+			isPlaying = true;
+			lastMoveTime = Time.time + snakeSpeed;
+		}*/
+
+		playUI.SetActive (true);
+		isPlaying = true;
+
+
+	}
+
+	public void clickRestart(){
+
 		refresh ();
+
+		clickStart ();
 	}
 
 	private void refresh(){
+		//show player
+		player.SetActive (true);
+
 		//destroy all stage and tail
 		GameObject[] clones = GameObject.FindGameObjectsWithTag("Clone");
 		foreach (GameObject clone in clones) {
@@ -240,8 +381,12 @@ public class Game_Script : MonoBehaviour {
 		recentStageObject = (GameObject)Instantiate (stageInitialPrefab);
 		recentStageObject.transform.parent = stageField.transform;
 
+		//reset UI
+		playUI.SetActive (false);
+		gameoverUI.SetActive (false);
+
 		isGrounded = true;
-		currentPoint = 1;
+		currentPoint = 2;
 		isStopped = true;
 		//moving camera
 		cameraPosition = cameraObject.transform.position;
@@ -261,11 +406,9 @@ public class Game_Script : MonoBehaviour {
 		//score and coin value
 		score = 0;
 		bestscore = PlayerPrefs.GetInt("bestscore",0);
-		currentCoin = 0;
 		//update score text
 		gameplayScoreText.text = "SCORE : "+score;
 		gameplayBestScoreText.text = "BEST : "+bestscore;
-		gameplayCoinText.text = "" + currentCoin;
 		//get coin
 		isGettingCoin = false;
 	}
