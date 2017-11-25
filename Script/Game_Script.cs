@@ -5,13 +5,19 @@ using UnityEngine.UI;
 using System.IO;
 
 public class Game_Script : MonoBehaviour {
+	//splash screen
+	public float splash_DelayTime;
+	private GameObject splashUI;
+	private Image panelImage;
 
 	//UI Object
 	private GameObject playUI;
 	private GameObject gameoverUI;
+	private GameObject menuUI;
 
 	//start parameter
-	private bool isPlaying;
+	[HideInInspector]
+	public bool isPlaying;
 
 	//jump
 	private GameObject player;
@@ -82,13 +88,15 @@ public class Game_Script : MonoBehaviour {
 	private Text gameplayScoreText;
 	private Text gameplayBestScoreText;
 	private Text gameplayCoinText;
-	//gameover scoring UI
-	private Text gameoverScoreText;
-	private Text gameoverBestscoreText;
 
-	private GameObject newBestScoreText;
 	//get coin
 	private bool isGettingCoin;
+
+	//gameover
+	private Text gameoverScoreText;
+	private Text gameoverBestscoreText;
+	private GameObject newBestScoreText;
+	public GameObject playerExplodePrefab;
 
 	//weak platform
 	public float weakPlatformTime;
@@ -101,13 +109,18 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		//splash
+		splashUI = GameObject.Find ("SplashScreen");
+		panelImage = GameObject.Find("SplashPanel").GetComponent<Image> ();
+		FadeInSplash();
+
 		//UI
+		menuUI = GameObject.Find ("MainMenu");
 		playUI = GameObject.Find ("GamePlay");
 		gameoverUI = GameObject.Find ("GameOver");
 
 		//playing parameter
-		//isPlaying = false;
-		isPlaying = true; //temporary, without main menu
+		isPlaying = false;
 
 
 		isGrounded = true;
@@ -185,11 +198,56 @@ public class Game_Script : MonoBehaviour {
 		isOnWeak = false;
 
 		//Hide UI
-		//playUI.SetActive (false);
+		playUI.SetActive (false);
 		gameoverUI.SetActive (false);
 
 	}
 
+
+	private void FadeInSplash(){
+		panelImage.CrossFadeAlpha(0.0f, 1.0f, false); //(alpha value, fade speed, not important)
+
+		//GooglePlayLogIn (); //start login when splash screen show
+		StartCoroutine(FadeOutSplash()); //temporary, without google play login
+
+	}
+
+	//google play LeaderBoard
+	private void GooglePlayLogIn ()
+	{
+		Social.localUser.Authenticate ((bool success) =>
+			{
+				if (success) {
+					//Debug.Log ("Login Sucess");
+					//GameObject.Find("Leaderboard").SetActive(false);
+					StartCoroutine(FadeOutSplash());
+				} else {
+					//Debug.Log ("Login failed");
+					//GameObject.Find("Help").SetActive(false);
+					StartCoroutine(FadeOutSplash());
+				}
+			});
+	}
+
+	IEnumerator FadeOutSplash(){
+		yield return new WaitForSeconds(splash_DelayTime);
+		panelImage.CrossFadeAlpha(1.0f, 1.0f, false);
+		yield return new WaitForSeconds(1.5f);
+
+		finishLoadingSplash ();
+	}
+
+	private void finishLoadingSplash(){
+		splashUI.SetActive (false);
+		//Finish Splash, start the sound
+		/*if (muteState > 0) {
+			muteONButton.SetActive (false);
+			//BGMaudioSource.Stop (); //No need because play on awake is false
+		} else {
+			muteOFFButton.SetActive (false);
+			BGMaudioSource.Play ();
+		}*/
+	}
 
 
 
@@ -285,6 +343,7 @@ public class Game_Script : MonoBehaviour {
 			isPlaying = false;
 			//hide player
 			player.SetActive (false);
+			GameObject.Instantiate (playerExplodePrefab, player.transform.position, Quaternion.identity);
 			//shake
 			StartCoroutine (Shake ());
 
@@ -325,7 +384,7 @@ public class Game_Script : MonoBehaviour {
 
 	public void clickStart(){
 
-		//menuUI.SetActive (false);
+		menuUI.SetActive (false);
 		/*if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
 			PlayerPrefs.SetInt ("firstTime", 1);
 			clickHowTo ();
