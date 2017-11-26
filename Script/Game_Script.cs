@@ -265,8 +265,6 @@ public class Game_Script : MonoBehaviour {
 			} else if (Input.GetKey (KeyCode.LeftArrow)) {
 				clickJump (-1);
 			}
-
-
 			//stopping point
 			if (currentPoint >= 0 && currentPoint <= 4) {
 				if (Mathf.Abs (player.transform.position.x - point [currentPoint]) < 0.05f && !isStopped) {
