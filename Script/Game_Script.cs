@@ -10,10 +10,45 @@ public class Game_Script : MonoBehaviour {
 	private GameObject splashUI;
 	private Image panelImage;
 
-	//UI Object
+	//Audio
+	public AudioClip selectSound;
+	public AudioClip eatSound;
+	public AudioClip jumpSound;
+	public AudioClip deathSound;
+	private AudioSource BGMaudioSource;
+	private AudioSource SEaudioSource;
+	//mute
+	private GameObject muteONButton;
+	private GameObject muteOFFButton;
+	private int muteState;
+
+	//revive
+	private GameObject reviveButton;
+	private bool reviveState;
+	private GameObject startReviveUI;
+
+
+
+	//UI object
+	private GameObject menuUI;
+	private GameObject howtoUI;
+	private GameObject tutorialUI;
 	private GameObject playUI;
 	private GameObject gameoverUI;
-	private GameObject menuUI;
+	private GameObject reviveUI;
+	private GameObject pauseUI;
+	private GameObject quitUI;
+	//shop UI
+	private GameObject shopUI;
+	private GameObject notEnoughUI;
+	private GameObject wantToBuyUI;
+	private GameObject afterAdsUI;
+
+	//tutorial
+	private GameObject tutorialControl;
+	private GameObject tutorialLeft;
+	private GameObject tutorialRight;
+	private GameObject tutorialEnd;
 
 	//start parameter
 	[HideInInspector]
@@ -76,23 +111,32 @@ public class Game_Script : MonoBehaviour {
 	private float selectedPrefabHeight;
 	private Vector2 spawnPosition;
 
+	//Characters
+	public Character_Templates[] characters;
+	private int selectedCharacter;
+	private int buyIndexCharacter;
+	private GameObject tempCharacterObject;
+
 	//restart initial parameter
 	private Vector3 cameraInitialPosition;
 	private Vector2 playerInitialPosition;
+	//prefab
 	public GameObject stageInitialPrefab;
+	public GameObject stageTutorialPrefab;
+	public GameObject stageRevivePrefab;
 
 	//score and coin
 	private int score;
 	private int bestscore;
 	private int collectedCoin;
-	private Text gameplayScoreText;
-	private Text gameplayBestScoreText;
-	private Text gameplayCoinText;
-
 	//get coin
 	private bool isGettingCoin;
 
-	//gameover
+	//Scoring UI
+	private Text gameplayScoreText;
+	private Text gameplayBestScoreText;
+	private Text gameplayCoinText;
+	//gameover and Scoring UI
 	private Text gameoverScoreText;
 	private Text gameoverBestscoreText;
 	private GameObject newBestScoreText;
@@ -114,10 +158,32 @@ public class Game_Script : MonoBehaviour {
 		panelImage = GameObject.Find("SplashPanel").GetComponent<Image> ();
 		FadeInSplash();
 
+		//audio
+		BGMaudioSource = this.GetComponent<AudioSource>();
+		SEaudioSource = this.gameObject.AddComponent<AudioSource> ();
+		//mute
+		muteONButton = GameObject.Find ("MuteON");
+		muteOFFButton = GameObject.Find ("MuteOFF");
+		muteState = PlayerPrefs.GetInt("mutestate",0);
+
 		//UI
 		menuUI = GameObject.Find ("MainMenu");
 		playUI = GameObject.Find ("GamePlay");
 		gameoverUI = GameObject.Find ("GameOver");
+		howtoUI = GameObject.Find ("HowTo");
+		pauseUI = GameObject.Find ("Pause");
+		quitUI = GameObject.Find ("Quit");
+		//shopUI
+		shopUI = GameObject.Find ("Shop");
+		notEnoughUI = GameObject.Find ("NotEnough");
+		wantToBuyUI = GameObject.Find ("WantToBuy");
+		afterAdsUI = GameObject.Find ("AfterAds");
+		//Tutorial
+		/*tutorialUI = GameObject.Find ("Tutorial");
+		tutorialControl = GameObject.Find ("TutorialControl");
+		tutorialLeft = GameObject.Find ("TutorialLeft");
+		tutorialRight = GameObject.Find ("TutorialRight");
+		tutorialEnd = GameObject.Find ("TutorialEnd");*/
 
 		//playing parameter
 		isPlaying = false;
@@ -165,6 +231,20 @@ public class Game_Script : MonoBehaviour {
 		prefabsToRand = new List<GameObject>();
 		recentStageObject = GameObject.Find("Stage0");
 
+		/*
+		//tutorial stage spawn
+		if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
+			selectedPrefab = stageTutorialPrefab;
+
+			selectedPrefabHeight = selectedPrefab.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * selectedPrefab.transform.localScale.y;
+			recentStageHeight = recentStageObject.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * recentStageObject.transform.localScale.y;
+			spawnPosition = recentStageObject.transform.position;
+			spawnPosition.y = spawnPosition.y + (recentStageHeight + selectedPrefabHeight);
+			recentStageObject = (GameObject)Instantiate (selectedPrefab, spawnPosition, Quaternion.identity);
+			recentStageObject.transform.parent = movingField.transform;
+		}
+		*/
+
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
 			spawnStages ();
@@ -197,9 +277,56 @@ public class Game_Script : MonoBehaviour {
 		//weak platform
 		isOnWeak = false;
 
+		/*
+		selectedCharacter = PlayerPrefs.GetInt("selectedCharacter",0);
+		buyIndexCharacter = 0;
+		for (int i = 0; i < characters.Length; i++) {
+
+			//get purchase Status database
+			if (i>0) {
+				if (PlayerPrefs.GetInt("purchaseCharacter"+i,0)>0) {
+					characters [i].purchased = true;
+				} 
+			}
+
+			//each Character in shop UI
+			tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + i).gameObject;
+			tempCharacterObject.transform.Find ("Head").GetComponent<Image> ().sprite = characters [i].head;
+			tempCharacterObject.transform.Find ("Tail").GetComponent<Image> ().sprite = characters [i].tail;
+			if (selectedCharacter == i) {
+				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
+			} else if (characters [i].purchased) {
+				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
+			} else {
+				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase/Price").GetComponent<Text> ().text = ""+characters [i].price;
+			}
+		}
+
+		//Head dimension
+		head = GameObject.Find ("Head");
+		headSprite = head.GetComponent<SpriteRenderer> ().sprite;
+		head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
+
+		*/
+
+
+
 		//Hide UI
+		howtoUI.SetActive (false);
+		//tutorialUI.SetActive (false);
 		playUI.SetActive (false);
 		gameoverUI.SetActive (false);
+		pauseUI.SetActive (false);
+		quitUI.SetActive (false);
+		//shop UI
+		shopUI.SetActive (false);
+		notEnoughUI.SetActive (false);
+		wantToBuyUI.SetActive (false);
+		afterAdsUI.SetActive (false);
 
 	}
 
@@ -240,13 +367,13 @@ public class Game_Script : MonoBehaviour {
 	private void finishLoadingSplash(){
 		splashUI.SetActive (false);
 		//Finish Splash, start the sound
-		/*if (muteState > 0) {
+		if (muteState > 0) {
 			muteONButton.SetActive (false);
 			//BGMaudioSource.Stop (); //No need because play on awake is false
 		} else {
 			muteOFFButton.SetActive (false);
 			BGMaudioSource.Play ();
-		}*/
+		}
 	}
 
 
@@ -258,7 +385,12 @@ public class Game_Script : MonoBehaviour {
 
 
 		if (isPlaying) {
-			
+
+			//if back button pressed, pause game
+			if (Input.GetKeyDown (KeyCode.Escape)) {
+				clickPause ();
+			}
+
 			//temporary keyboard control
 			if (Input.GetKey (KeyCode.RightArrow)) {
 				clickJump (1);
@@ -303,6 +435,27 @@ public class Game_Script : MonoBehaviour {
 			}
 			
 		} else {
+			//quiting
+			if (Input.GetKeyDown (KeyCode.Escape)) {
+				if (pauseUI.activeSelf) {
+					clickResume ();
+				} else if (gameoverUI.activeSelf) {
+					clickExit ();
+				} else if (howtoUI.activeSelf) {
+					clickCloseHowTo();
+				} else if (notEnoughUI.activeSelf) {
+					clickExitNotEnough ();
+				} else if (wantToBuyUI.activeSelf) {
+					clickExitWantToBuy ();
+				} else if (shopUI.activeSelf) {
+					clickExitShop ();
+				} else if (quitUI.activeSelf) {
+					quitUI.SetActive (false);
+				} else {
+					quitUI.SetActive (true);
+				}
+
+			} 
 		}
 		
 	}
@@ -337,7 +490,7 @@ public class Game_Script : MonoBehaviour {
 	public void gameover(){
 		
 		if (isPlaying) {
-			//SEaudioSource.PlayOneShot (deathSound, 0.6f);
+			SEaudioSource.PlayOneShot (deathSound, 0.6f);
 			isPlaying = false;
 			//hide player
 			player.SetActive (false);
@@ -350,7 +503,7 @@ public class Game_Script : MonoBehaviour {
 			firstJump = false;
 			playUI.SetActive (false);
 			gameoverUI.SetActive (true);
-			//pauseUI.SetActive (false);
+			pauseUI.SetActive (false);
 
 			/*if (reviveState) {
 				reviveButton.SetActive (false);
@@ -403,7 +556,7 @@ public class Game_Script : MonoBehaviour {
 			isPlaying = true;
 			lastMoveTime = Time.time + snakeSpeed;
 		}*/
-
+		playSelectSound ();
 		playUI.SetActive (true);
 		isPlaying = true;
 
@@ -604,6 +757,190 @@ public class Game_Script : MonoBehaviour {
 			isOnWeak = true;
 			weakPlatform = platform;
 		}
+	}
+
+
+	public void clickPause(){
+		if (isPlaying) {
+			playSelectSound ();
+
+			isPlaying = false;
+			pauseUI.SetActive (true);
+		}
+	}
+
+	public void clickResume(){
+		if (!isPlaying) {
+			playSelectSound ();
+
+			isPlaying = true;
+			pauseUI.SetActive (false);
+		}
+	}
+
+	public IEnumerator screenshotAndShare(){
+
+		yield return new WaitForEndOfFrame();
+
+		//take screen shot
+		Texture2D screenTexture = new Texture2D(Screen.width, Screen.height,TextureFormat.RGB24,true);
+		screenTexture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0, true);
+		screenTexture.Apply();
+
+		//save screen shot
+		byte[] dataToSave = screenTexture.EncodeToPNG();
+		string destination = Application.persistentDataPath+"/myscreenshot.png";
+		File.WriteAllBytes(destination, dataToSave);
+
+
+		//share
+		if(!Application.isEditor)
+		{
+			//if UNITY_ANDROID
+			string body = "Can you beat my best score?\n" +
+				"https://play.google.com/store/apps/details?id=com.bekko.SnuckySnake";
+			string subject = "Snucky Snake score";
+
+			AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
+			AndroidJavaObject intentObject = new AndroidJavaObject("android.content.Intent");
+			intentObject.Call<AndroidJavaObject>("setAction", intentClass.GetStatic<string>("ACTION_SEND"));
+			AndroidJavaClass uriClass = new AndroidJavaClass("android.net.Uri");
+			AndroidJavaObject uriObject = uriClass.CallStatic<AndroidJavaObject>("parse","file://" + destination);
+			intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_STREAM"), uriObject);
+			intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_TEXT"), body );
+			intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_SUBJECT"), subject);
+			intentObject.Call<AndroidJavaObject>("setType", "image/jpeg");
+			AndroidJavaClass unity = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+			AndroidJavaObject currentActivity = unity.GetStatic<AndroidJavaObject>("currentActivity");
+
+			// run intent from the current Activity
+			currentActivity.Call("startActivity", intentObject);
+		}
+
+
+	}
+
+	public void clickShare(){
+		playSelectSound ();
+		StartCoroutine (screenshotAndShare ());
+	}
+
+	public void clickExit(){
+		playSelectSound ();
+		menuUI.SetActive (true);
+		tutorialUI.SetActive (false);
+		pauseUI.SetActive (false);
+		refresh ();
+	}
+
+	public void clickQuit(){
+		playSelectSound ();
+		Application.Quit();
+	}
+
+	public void clickCancelQuit(){
+		playSelectSound ();
+		quitUI.SetActive (false);
+	}
+
+	public void clickHowTo(){
+		playSelectSound ();
+		howtoUI.SetActive (true);
+	}
+
+	public void clickCloseHowTo(){
+		if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
+			clickStart ();
+		} else {
+			playSelectSound ();
+		}
+		howtoUI.SetActive (false);
+
+	}
+
+	public void clickMute(){
+		if (muteState > 0) {
+			muteOFFButton.SetActive (false);
+			muteONButton.SetActive (true);
+			BGMaudioSource.Play ();
+			muteState = 0;
+		} else {
+			muteONButton.SetActive (false);
+			muteOFFButton.SetActive (true);
+			BGMaudioSource.Stop ();
+			muteState = 1;
+		}
+		PlayerPrefs.SetInt("mutestate", muteState);
+	}
+
+	public void clickShop(){
+		playSelectSound ();
+		shopUI.SetActive (true);
+	}
+
+	public void clickExitShop(){
+		playSelectSound ();
+		shopUI.SetActive (false);
+	}
+
+	public void clickBuy(int indexCharacter){
+		playSelectSound ();
+		if (collectedCoin >= characters [indexCharacter].price) {
+			wantToBuyUI.SetActive (true);
+			buyIndexCharacter = indexCharacter;
+		} else {
+			notEnoughUI.SetActive (true);
+		}
+	}
+
+	public void ClickConfirmBuy(){
+		clickExitWantToBuy ();
+		//Use recent bought character
+		clickUseCharacter (buyIndexCharacter);
+
+		//parameter change
+		characters [buyIndexCharacter].purchased = true;
+		PlayerPrefs.SetInt ("purchaseCharacter" + buyIndexCharacter, 1);
+		//pay food
+		collectedCoin = collectedCoin - characters [buyIndexCharacter].price;
+		PlayerPrefs.SetInt ("collectedCoin", collectedCoin);
+		gameplayCoinText.text = "" + collectedCoin;
+	}
+
+	public void clickUseCharacter(int indexCharacter){
+		playSelectSound ();
+		//UI change to used
+		tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + indexCharacter).gameObject;
+		tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (true);
+		tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
+		tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
+		//Change old Used label
+		tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + selectedCharacter).gameObject;
+		tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
+		tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (true);
+
+		//change parameter
+		selectedCharacter = indexCharacter;
+		PlayerPrefs.SetInt("selectedCharacter",selectedCharacter);
+
+		//snake sprite change
+		//head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
+		refresh();
+	}
+
+	public void clickExitNotEnough (){
+		playSelectSound ();
+		notEnoughUI.SetActive (false);
+		afterAdsUI.SetActive (false);
+	}
+
+	public void clickExitWantToBuy(){
+		playSelectSound ();
+		wantToBuyUI.SetActive (false);
+	}
+
+	private void playSelectSound(){
+		SEaudioSource.PlayOneShot (selectSound, 0.6f);
 	}
 
 
