@@ -32,7 +32,6 @@ public class Game_Script : MonoBehaviour {
 	//UI object
 	private GameObject menuUI;
 	private GameObject howtoUI;
-	private GameObject tutorialUI;
 	private GameObject playUI;
 	private GameObject gameoverUI;
 	private GameObject reviveUI;
@@ -44,11 +43,6 @@ public class Game_Script : MonoBehaviour {
 	private GameObject wantToBuyUI;
 	private GameObject afterAdsUI;
 
-	//tutorial
-	private GameObject tutorialControl;
-	private GameObject tutorialLeft;
-	private GameObject tutorialRight;
-	private GameObject tutorialEnd;
 
 	//start parameter
 	[HideInInspector]
@@ -61,6 +55,8 @@ public class Game_Script : MonoBehaviour {
 	private Rigidbody2D rigid;
 	private float gravity;
 	private bool isGrounded;
+	//player direction
+	private Vector3 headRotate;
 	private int lastDirection;
 	//reusable variable
 	private Vector2 targetPosition;
@@ -153,6 +149,7 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
 		//splash
 		splashUI = GameObject.Find ("SplashScreen");
 		panelImage = GameObject.Find("SplashPanel").GetComponent<Image> ();
@@ -178,12 +175,6 @@ public class Game_Script : MonoBehaviour {
 		notEnoughUI = GameObject.Find ("NotEnough");
 		wantToBuyUI = GameObject.Find ("WantToBuy");
 		afterAdsUI = GameObject.Find ("AfterAds");
-		//Tutorial
-		/*tutorialUI = GameObject.Find ("Tutorial");
-		tutorialControl = GameObject.Find ("TutorialControl");
-		tutorialLeft = GameObject.Find ("TutorialLeft");
-		tutorialRight = GameObject.Find ("TutorialRight");
-		tutorialEnd = GameObject.Find ("TutorialEnd");*/
 
 		//playing parameter
 		isPlaying = false;
@@ -196,6 +187,8 @@ public class Game_Script : MonoBehaviour {
 		BounceRange = GameObject.Find ("BounceRange").transform;
 		rigid = player.GetComponent<Rigidbody2D>();
 		gravity = Physics.gravity.magnitude * rigid.gravityScale;
+		//direction
+		headRotate = new Vector3(0,180,0); //initialize only
 		lastDirection = 1; //initialize only
 		// Selected angle in radians
 		angle = initialAngle * Mathf.Deg2Rad;
@@ -230,20 +223,6 @@ public class Game_Script : MonoBehaviour {
 		//stages spawn initialize
 		prefabsToRand = new List<GameObject>();
 		recentStageObject = GameObject.Find("Stage0");
-
-		/*
-		//tutorial stage spawn
-		if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
-			selectedPrefab = stageTutorialPrefab;
-
-			selectedPrefabHeight = selectedPrefab.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * selectedPrefab.transform.localScale.y;
-			recentStageHeight = recentStageObject.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * recentStageObject.transform.localScale.y;
-			spawnPosition = recentStageObject.transform.position;
-			spawnPosition.y = spawnPosition.y + (recentStageHeight + selectedPrefabHeight);
-			recentStageObject = (GameObject)Instantiate (selectedPrefab, spawnPosition, Quaternion.identity);
-			recentStageObject.transform.parent = movingField.transform;
-		}
-		*/
 
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
@@ -429,6 +408,7 @@ public class Game_Script : MonoBehaviour {
 
 			//get coin
 			if (isGettingCoin) {
+				SEaudioSource.PlayOneShot (eatSound, 0.6f);
 				collectedCoin = collectedCoin + 1;
 				gameplayCoinText.text = "" + collectedCoin;
 				isGettingCoin = false;
@@ -503,7 +483,10 @@ public class Game_Script : MonoBehaviour {
 			firstJump = false;
 			playUI.SetActive (false);
 			gameoverUI.SetActive (true);
+
+			//resume physic if paused
 			pauseUI.SetActive (false);
+			Time.timeScale = 1;
 
 			/*if (reviveState) {
 				reviveButton.SetActive (false);
@@ -536,29 +519,14 @@ public class Game_Script : MonoBehaviour {
 	public void clickStart(){
 
 		menuUI.SetActive (false);
-		/*if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
+		if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
 			PlayerPrefs.SetInt ("firstTime", 1);
 			clickHowTo ();
-		} else if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
-			playSelectSound ();
-			tutorialUI.SetActive (true);
-			tutorialEnd.SetActive (false);
-			tutorialLeft.SetActive (false);
-			tutorialRight.SetActive (false);
-			tutorialControl.SetActive (false);
-			currentScoreText.text = "" + score;
-			isPlaying = true;
-			lastMoveTime = Time.time + snakeSpeed;
 		} else {
 			playSelectSound ();
 			playUI.SetActive (true);
-			currentScoreText.text = "" + score;
 			isPlaying = true;
-			lastMoveTime = Time.time + snakeSpeed;
-		}*/
-		playSelectSound ();
-		playUI.SetActive (true);
-		isPlaying = true;
+		}
 
 
 	}
@@ -595,9 +563,20 @@ public class Game_Script : MonoBehaviour {
 		playUI.SetActive (false);
 		gameoverUI.SetActive (false);
 
+		//initial parameter
 		isGrounded = true;
 		currentPoint = 2;
 		isStopped = true;
+
+		//rotate to initial position
+		if (lastDirection != 1) {
+			player.transform.Rotate (headRotate);
+			lastDirection = 1;
+		}
+
+
+
+
 		//moving camera
 		cameraPosition = cameraObject.transform.position;
 		//chasing camera
@@ -621,6 +600,46 @@ public class Game_Script : MonoBehaviour {
 		gameplayBestScoreText.text = "BEST : "+bestscore;
 		//get coin
 		isGettingCoin = false;
+
+		//weak platform
+		isOnWeak = false;
+	
+
+		/*
+		selectedCharacter = PlayerPrefs.GetInt("selectedCharacter",0);
+		buyIndexCharacter = 0;
+		for (int i = 0; i < characters.Length; i++) {
+
+			//get purchase Status database
+			if (i>0) {
+				if (PlayerPrefs.GetInt("purchaseCharacter"+i,0)>0) {
+					characters [i].purchased = true;
+				} 
+			}
+
+			//each Character in shop UI
+			tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + i).gameObject;
+			tempCharacterObject.transform.Find ("Head").GetComponent<Image> ().sprite = characters [i].head;
+			tempCharacterObject.transform.Find ("Tail").GetComponent<Image> ().sprite = characters [i].tail;
+			if (selectedCharacter == i) {
+				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
+			} else if (characters [i].purchased) {
+				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
+			} else {
+				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
+				tempCharacterObject.transform.Find ("Purchase/Price").GetComponent<Text> ().text = ""+characters [i].price;
+			}
+		}
+
+		//Head dimension
+		head = GameObject.Find ("Head");
+		headSprite = head.GetComponent<SpriteRenderer> ().sprite;
+		head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
+
+		*/
 	}
 
 	public void spawnStages(){
@@ -652,6 +671,9 @@ public class Game_Script : MonoBehaviour {
 		//direction -1 left, 1 right
 
 		if (isGrounded) {
+			//sound
+			SEaudioSource.PlayOneShot (jumpSound, 0.6f);
+
 			//parabola jump algorithm
 			targetPosition = targetRange.position;
 
@@ -686,8 +708,13 @@ public class Game_Script : MonoBehaviour {
 				firstJump = true;
 			}
 
-			//update last direction
-			lastDirection = direction;
+			//update direction
+			if (lastDirection != direction) {
+				player.transform.Rotate (headRotate);
+				//update last direction
+				lastDirection = direction;
+			}
+
 
 			//destroy weak platform
 			if (isOnWeak) {
@@ -743,8 +770,12 @@ public class Game_Script : MonoBehaviour {
 		rigid.velocity = velocity;
 		isGrounded = false;
 
-		//update last direction
-		lastDirection = direction;
+		//update direction
+		if (lastDirection != direction) {
+			player.transform.Rotate (headRotate);
+			//update last direction
+			lastDirection = direction;
+		}
 	}
 
 	public void platformBounce(){
@@ -765,7 +796,10 @@ public class Game_Script : MonoBehaviour {
 			playSelectSound ();
 
 			isPlaying = false;
+
+			//pause physic
 			pauseUI.SetActive (true);
+			Time.timeScale = 0;
 		}
 	}
 
@@ -774,7 +808,10 @@ public class Game_Script : MonoBehaviour {
 			playSelectSound ();
 
 			isPlaying = true;
+
+			//resume physic
 			pauseUI.SetActive (false);
+			Time.timeScale = 1;
 		}
 	}
 
@@ -828,9 +865,14 @@ public class Game_Script : MonoBehaviour {
 	public void clickExit(){
 		playSelectSound ();
 		menuUI.SetActive (true);
-		tutorialUI.SetActive (false);
+
+		//resume physic
 		pauseUI.SetActive (false);
+		Time.timeScale = 1;
+
 		refresh ();
+
+
 	}
 
 	public void clickQuit(){
@@ -850,6 +892,7 @@ public class Game_Script : MonoBehaviour {
 
 	public void clickCloseHowTo(){
 		if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
+			PlayerPrefs.SetInt ("firstTime", 2);
 			clickStart ();
 		} else {
 			playSelectSound ();
