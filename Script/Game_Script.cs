@@ -118,7 +118,6 @@ public class Game_Script : MonoBehaviour {
 	private Vector2 playerInitialPosition;
 	//prefab
 	public GameObject stageInitialPrefab;
-	public GameObject stageTutorialPrefab;
 	public GameObject stageRevivePrefab;
 
 	//score and coin
@@ -136,12 +135,16 @@ public class Game_Script : MonoBehaviour {
 	private Text gameoverScoreText;
 	private Text gameoverBestscoreText;
 	private GameObject newBestScoreText;
-	public GameObject playerExplodePrefab;
+
 
 	//weak platform
-	public float weakPlatformTime;
 	private bool isOnWeak;
 	private GameObject weakPlatform;
+
+	//animation prefab
+	public GameObject playerExplodePrefab;
+	public GameObject wallBreakPrefab;
+	public GameObject platformBreakPrefab;
 
 
 
@@ -718,15 +721,18 @@ public class Game_Script : MonoBehaviour {
 
 			//destroy weak platform
 			if (isOnWeak) {
+				GameObject.Instantiate (platformBreakPrefab, weakPlatform.transform.position, Quaternion.identity);
 				Destroy (weakPlatform);
+				isOnWeak = false;
 			}
 		}
 	}
 
-	public void groundCheck(){
+	public bool groundCheck(){
 		if (rigid.velocity.y <= 0) {
 			isGrounded = true;
 		}
+		return isGrounded;
 	}
 
 	public void getCoin(){

@@ -13,16 +13,17 @@ public class Player_Script : MonoBehaviour {
 	void OnCollisionEnter2D(Collision2D coll){
 		if (coll.gameObject.name.StartsWith ("WallLeft")) {
 			game.wallBounce (1); //bounce right
+
 		} else if (coll.gameObject.name.StartsWith ("WallRight")) {
 			game.wallBounce (-1); //bounce left
 		} else if (coll.gameObject.name.StartsWith ("WeakWallLeft")) {
 			game.wallBounce (1); //bounce right
-			print("Bounce Right");
 			Destroy(coll.transform.parent.gameObject);
+			GameObject.Instantiate (game.wallBreakPrefab, coll.transform.position, Quaternion.Euler(new Vector3(0,180,0)));
 		} else if (coll.gameObject.name.StartsWith ("WeakWallRight")) {
 			game.wallBounce (-1); //bounce left
-			print("Bounce Left");
 			Destroy(coll.transform.parent.gameObject);
+			GameObject.Instantiate (game.wallBreakPrefab, coll.transform.position, Quaternion.identity);
 		}
 	}
 
@@ -35,8 +36,10 @@ public class Player_Script : MonoBehaviour {
 		} else if (coll.name.StartsWith ("WeakPlatform")) {
 			game.weakGroundCheck (coll.gameObject);
 		} else if (coll.name.StartsWith ("BouncePlatform")) {
-			game.groundCheck ();
-			game.platformBounce ();
+			if (game.groundCheck ()) {
+				coll.GetComponent<Animator> ().SetTrigger ("stepped");
+				game.platformBounce ();
+			}
 		} else if (coll.tag == "Enemy"){
 			game.gameover ();
 		}
