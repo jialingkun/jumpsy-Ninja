@@ -10,6 +10,9 @@ public class Game_Script : MonoBehaviour {
 	private GameObject splashUI;
 	private Image panelImage;
 
+	//ads component
+	private Ads ads;
+
 	//Audio
 	public AudioClip selectSound;
 	public AudioClip eatSound;
@@ -25,7 +28,6 @@ public class Game_Script : MonoBehaviour {
 	//revive
 	private GameObject reviveButton;
 	private bool reviveState;
-	private GameObject startReviveUI;
 
 
 
@@ -158,6 +160,8 @@ public class Game_Script : MonoBehaviour {
 		panelImage = GameObject.Find("SplashPanel").GetComponent<Image> ();
 		FadeInSplash();
 
+		ads = this.GetComponent<Ads> ();
+
 		//audio
 		BGMaudioSource = this.GetComponent<AudioSource>();
 		SEaudioSource = this.gameObject.AddComponent<AudioSource> ();
@@ -178,6 +182,10 @@ public class Game_Script : MonoBehaviour {
 		notEnoughUI = GameObject.Find ("NotEnough");
 		wantToBuyUI = GameObject.Find ("WantToBuy");
 		afterAdsUI = GameObject.Find ("AfterAds");
+
+		//revive
+		reviveButton = GameObject.Find ("Revive");
+		reviveState = false;
 
 		//playing parameter
 		isPlaying = false;
@@ -363,7 +371,7 @@ public class Game_Script : MonoBehaviour {
 
 	
 	// Update is called once per frame
-	void FixedUpdate () {
+	void Update () {
 
 
 		if (isPlaying) {
@@ -491,11 +499,11 @@ public class Game_Script : MonoBehaviour {
 			pauseUI.SetActive (false);
 			Time.timeScale = 1;
 
-			/*if (reviveState) {
+			if (reviveState) {
 				reviveButton.SetActive (false);
 			} else {
 				reviveButton.SetActive (true);
-			}*/
+			}
 
 
 			newBestScoreText.SetActive (false);
@@ -514,7 +522,7 @@ public class Game_Script : MonoBehaviour {
 			gameoverBestscoreText.text = "" + bestscore;
 
 
-			//ads.addInterstitialCounter ();
+			ads.addInterstitialCounter ();
 			//addScoreToLeaderBoard (bestscore);
 		}
 	}
@@ -539,6 +547,10 @@ public class Game_Script : MonoBehaviour {
 		refresh ();
 
 		clickStart ();
+	}
+
+	public void clickRevive(){
+		ads.ShowRewardVideo ();
 	}
 
 	private void refresh(){
@@ -570,6 +582,7 @@ public class Game_Script : MonoBehaviour {
 		isGrounded = true;
 		currentPoint = 2;
 		isStopped = true;
+		reviveState = false;
 
 		//rotate to initial position
 		if (lastDirection != 1) {
@@ -590,10 +603,6 @@ public class Game_Script : MonoBehaviour {
 		for (int i = 0; i < stagesInitialCount; i++) {
 			spawnStages ();
 		}
-
-		//restart initial parameter
-		cameraInitialPosition = cameraObject.transform.position;
-		playerInitialPosition = player.transform.position;
 
 		//score and coin value
 		score = 0;
@@ -644,6 +653,66 @@ public class Game_Script : MonoBehaviour {
 
 		*/
 	}
+
+	public void refreshRevive(){
+
+		//destroy all stage
+		GameObject[] clones = GameObject.FindGameObjectsWithTag("Clone");
+		foreach (GameObject clone in clones) {
+			GameObject.Destroy(clone);
+		}
+
+
+		//instantiate stage revive
+		recentStageObject = (GameObject)Instantiate (stageRevivePrefab, GameObject.Find("StageRevivePosition").transform.position,Quaternion.identity);
+		recentStageObject.transform.parent = stageField.transform;
+
+		//Start the game !Important
+		playUI.SetActive (true);
+		gameoverUI.SetActive (false);
+		isPlaying = true;
+
+		//initial parameter
+		isGrounded = true;
+		currentPoint = 2;
+		isStopped = true;
+		//important!!!!
+		reviveState = true;
+
+		//rotate to initial position
+		if (lastDirection != 1) {
+			player.transform.Rotate (headRotate);
+			lastDirection = 1;
+		}
+
+		//moving camera
+		cameraPosition = cameraObject.transform.position;
+		//chasing camera
+		firstJump = false;
+		currentSpeed = initialSpeed;
+
+		//stages inital spawn
+		for (int i = 0; i < stagesInitialCount; i++) {
+			spawnStages ();
+		}
+
+		//get coin
+		isGettingCoin = false;
+
+		//weak platform
+		isOnWeak = false;
+
+		//show player
+		player.SetActive (true);
+
+		//return to initial position
+		//cameraObject.transform.position = cameraInitialPosition; //camera stay on revive
+		rigid.velocity = Vector2.zero;
+		player.transform.position = GameObject.Find("PlayerRevivePosition").transform.position;
+		//don't draw trail when going back
+		player.GetComponent<TrailRenderer>().Clear();
+	}
+
 
 	public void spawnStages(){
 		prefabsToRand.Clear ();
@@ -986,6 +1055,15 @@ public class Game_Script : MonoBehaviour {
 	public void clickExitWantToBuy(){
 		playSelectSound ();
 		wantToBuyUI.SetActive (false);
+	}
+
+	public void adsCoinReward(int rewardAmount){
+		//collected coin
+		collectedCoin = collectedCoin + rewardAmount;
+		PlayerPrefs.SetInt ("coin", collectedCoin);
+		gameplayCoinText.text = "" + collectedCoin;
+
+		afterAdsUI.SetActive (true);
 	}
 
 	private void playSelectSound(){
