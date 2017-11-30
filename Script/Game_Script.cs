@@ -689,7 +689,6 @@ public class Game_Script : MonoBehaviour {
 		cameraPosition = cameraObject.transform.position;
 		//chasing camera
 		firstJump = false;
-		currentSpeed = initialSpeed;
 
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
