@@ -179,16 +179,16 @@ public class Ads : MonoBehaviour {
 	void HandleShowResult (ShowResult result)
 	{
 		if(result == ShowResult.Finished) {
-			Debug.Log("Video completed - Offer a reward to the player");
+			//Debug.Log("Video completed - Offer a reward to the player");
 			if (freeCoinReward) {
 				freeCoinReward = false;
-				gameScript.adsCoinReward (50);
+				gameScript.adsCoinReward (100);
 			} else {
 				gameScript.refreshRevive();
 			}
 
 		}else if(result == ShowResult.Skipped) {
-			Debug.LogWarning("Video was skipped - Do NOT reward the player");
+			//Debug.LogWarning("Video was skipped - Do NOT reward the player");
 
 		}else if(result == ShowResult.Failed) {
 			Debug.LogError("Video failed to show");

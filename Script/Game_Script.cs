@@ -133,6 +133,7 @@ public class Game_Script : MonoBehaviour {
 	private Text gameplayScoreText;
 	private Text gameplayBestScoreText;
 	private Text gameplayCoinText;
+	private Text shopCoinText;
 	//gameover and Scoring UI
 	private Text gameoverScoreText;
 	private Text gameoverBestscoreText;
@@ -154,6 +155,8 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		//PlayerPrefs.DeleteAll ();
+
 
 		//splash
 		splashUI = GameObject.Find ("SplashScreen");
@@ -248,6 +251,7 @@ public class Game_Script : MonoBehaviour {
 		gameplayScoreText = GameObject.Find("CurrentScore").GetComponent<Text>();
 		gameplayBestScoreText = GameObject.Find("CurrentBestScore").GetComponent<Text>();
 		gameplayCoinText = GameObject.Find("TotalCoin").GetComponent<Text>();
+		shopCoinText = GameObject.Find("ShopTotalCoin").GetComponent<Text>();
 
 		gameoverScoreText = GameObject.Find ("Score").GetComponent<Text>();
 		gameoverBestscoreText = GameObject.Find ("BestScore").GetComponent<Text>();
@@ -261,13 +265,14 @@ public class Game_Script : MonoBehaviour {
 		gameplayScoreText.text = "SCORE : "+score;
 		gameplayBestScoreText.text = "BEST : "+bestscore;
 		gameplayCoinText.text = "" + collectedCoin;
+		shopCoinText.text = "" + collectedCoin;
 		//get coin
 		isGettingCoin = false;
 
 		//weak platform
 		isOnWeak = false;
 
-		/*
+
 		selectedCharacter = PlayerPrefs.GetInt("selectedCharacter",0);
 		buyIndexCharacter = 0;
 		for (int i = 0; i < characters.Length; i++) {
@@ -280,9 +285,8 @@ public class Game_Script : MonoBehaviour {
 			}
 
 			//each Character in shop UI
-			tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + i).gameObject;
-			tempCharacterObject.transform.Find ("Head").GetComponent<Image> ().sprite = characters [i].head;
-			tempCharacterObject.transform.Find ("Tail").GetComponent<Image> ().sprite = characters [i].tail;
+			tempCharacterObject = transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + i).gameObject;
+			tempCharacterObject.transform.Find ("Image").GetComponent<Image> ().sprite = characters [i].image;
 			if (selectedCharacter == i) {
 				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
 				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
@@ -295,13 +299,10 @@ public class Game_Script : MonoBehaviour {
 				tempCharacterObject.transform.Find ("Purchase/Price").GetComponent<Text> ().text = ""+characters [i].price;
 			}
 		}
+		// change player sprite
+		player.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].image;
 
-		//Head dimension
-		head = GameObject.Find ("Head");
-		headSprite = head.GetComponent<SpriteRenderer> ().sprite;
-		head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
-
-		*/
+		
 
 
 
@@ -422,6 +423,7 @@ public class Game_Script : MonoBehaviour {
 				SEaudioSource.PlayOneShot (eatSound, 0.6f);
 				collectedCoin = collectedCoin + 1;
 				gameplayCoinText.text = "" + collectedCoin;
+				shopCoinText.text = "" + collectedCoin;
 				isGettingCoin = false;
 			}
 			
@@ -615,43 +617,6 @@ public class Game_Script : MonoBehaviour {
 
 		//weak platform
 		isOnWeak = false;
-	
-
-		/*
-		selectedCharacter = PlayerPrefs.GetInt("selectedCharacter",0);
-		buyIndexCharacter = 0;
-		for (int i = 0; i < characters.Length; i++) {
-
-			//get purchase Status database
-			if (i>0) {
-				if (PlayerPrefs.GetInt("purchaseCharacter"+i,0)>0) {
-					characters [i].purchased = true;
-				} 
-			}
-
-			//each Character in shop UI
-			tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + i).gameObject;
-			tempCharacterObject.transform.Find ("Head").GetComponent<Image> ().sprite = characters [i].head;
-			tempCharacterObject.transform.Find ("Tail").GetComponent<Image> ().sprite = characters [i].tail;
-			if (selectedCharacter == i) {
-				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
-				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
-			} else if (characters [i].purchased) {
-				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
-				tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
-			} else {
-				tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
-				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
-				tempCharacterObject.transform.Find ("Purchase/Price").GetComponent<Text> ().text = ""+characters [i].price;
-			}
-		}
-
-		//Head dimension
-		head = GameObject.Find ("Head");
-		headSprite = head.GetComponent<SpriteRenderer> ().sprite;
-		head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
-
-		*/
 	}
 
 	public void refreshRevive(){
@@ -705,7 +670,7 @@ public class Game_Script : MonoBehaviour {
 		player.SetActive (true);
 
 		//return to initial position
-		//cameraObject.transform.position = cameraInitialPosition; //camera stay on revive
+		//cameraObject.transform.position = cameraInitialPosition; //not needed, camera stay on revive
 		rigid.velocity = Vector2.zero;
 		player.transform.position = GameObject.Find("PlayerRevivePosition").transform.position;
 		//don't draw trail when going back
@@ -1022,17 +987,18 @@ public class Game_Script : MonoBehaviour {
 		collectedCoin = collectedCoin - characters [buyIndexCharacter].price;
 		PlayerPrefs.SetInt ("collectedCoin", collectedCoin);
 		gameplayCoinText.text = "" + collectedCoin;
+		shopCoinText.text = "" + collectedCoin;
 	}
 
 	public void clickUseCharacter(int indexCharacter){
 		playSelectSound ();
 		//UI change to used
-		tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + indexCharacter).gameObject;
+		tempCharacterObject = transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + indexCharacter).gameObject;
 		tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (true);
 		tempCharacterObject.transform.Find ("Purchase").gameObject.SetActive (false);
 		tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
 		//Change old Used label
-		tempCharacterObject = transform.Find ("Shop/ScrollView/Viewport/Content/Character" + selectedCharacter).gameObject;
+		tempCharacterObject = transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + selectedCharacter).gameObject;
 		tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
 		tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (true);
 
@@ -1041,8 +1007,8 @@ public class Game_Script : MonoBehaviour {
 		PlayerPrefs.SetInt("selectedCharacter",selectedCharacter);
 
 		//snake sprite change
-		//head.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].head;
-		refresh();
+		player.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].image;
+		//refresh();
 	}
 
 	public void clickExitNotEnough (){
@@ -1061,6 +1027,7 @@ public class Game_Script : MonoBehaviour {
 		collectedCoin = collectedCoin + rewardAmount;
 		PlayerPrefs.SetInt ("coin", collectedCoin);
 		gameplayCoinText.text = "" + collectedCoin;
+		shopCoinText.text = "" + collectedCoin;
 
 		afterAdsUI.SetActive (true);
 	}

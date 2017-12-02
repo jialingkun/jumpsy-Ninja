@@ -4,7 +4,7 @@ using UnityEngine;
 
 [System.Serializable]
 public class Character_Templates{
-	public Sprite body;
+	public Sprite image;
 	public int price;
 	public bool purchased;
 }
