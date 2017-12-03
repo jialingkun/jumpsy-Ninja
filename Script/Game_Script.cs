@@ -28,6 +28,7 @@ public class Game_Script : MonoBehaviour {
 	//revive
 	private GameObject reviveButton;
 	private bool reviveState;
+	public GameObject stageRevivePrefab;
 
 
 
@@ -97,8 +98,8 @@ public class Game_Script : MonoBehaviour {
 
 	//Stage field
 	private GameObject stageField;
-
 	//stages
+	public GameObject stageInitialPrefab;
 	public Stage_Templates[] stageTemplates;
 	public int stagesInitialCount;
 	private GameObject recentStageObject;
@@ -109,6 +110,23 @@ public class Game_Script : MonoBehaviour {
 	private float selectedPrefabHeight;
 	private Vector2 spawnPosition;
 
+	//Background field
+	private GameObject backgroundField;
+	private Vector2 backgroundFieldPosition;
+	public float backgroundSlowDown;
+	//background
+	public GameObject backgroundInitialPrefab;
+	public Background_Templates[] backgroundTemplates;
+	public int backgroundInitialCount;
+	private GameObject recentBackgroundObject;
+	private float recentBackgroundHeight;
+	//transition parameter
+	private int currentBackgroundTemplateNumber;
+	//random prefabs to spawn
+	private GameObject selectedBackgroundPrefab;
+	private float selectedBackgroundPrefabHeight;
+	private Vector3 backgroundSpawnPosition;
+
 	//Characters
 	public Character_Templates[] characters;
 	private int selectedCharacter;
@@ -118,9 +136,6 @@ public class Game_Script : MonoBehaviour {
 	//restart initial parameter
 	private Vector3 cameraInitialPosition;
 	private Vector2 playerInitialPosition;
-	//prefab
-	public GameObject stageInitialPrefab;
-	public GameObject stageRevivePrefab;
 
 	//score and coin
 	private int score;
@@ -231,7 +246,7 @@ public class Game_Script : MonoBehaviour {
 		currentSpeed = initialSpeed;
 
 		//Stage field
-		stageField = GameObject.Find("StageField");;
+		stageField = GameObject.Find("StageField");
 
 
 		//stages spawn initialize
@@ -242,6 +257,19 @@ public class Game_Script : MonoBehaviour {
 		for (int i = 0; i < stagesInitialCount; i++) {
 			spawnStages ();
 		}
+
+
+		//Background field
+		backgroundField = GameObject.Find("BackgroundField");
+		backgroundFieldPosition = backgroundField.transform.position;
+		recentBackgroundObject = GameObject.Find("Background0");
+		//transition
+		currentBackgroundTemplateNumber = 0;
+		//Background inital spawn
+		for (int i = 0; i < backgroundInitialCount; i++) {
+			spawnBackground ();
+		}
+
 
 		//restart initial parameter
 		cameraInitialPosition = cameraObject.transform.position;
@@ -411,8 +439,11 @@ public class Game_Script : MonoBehaviour {
 				if (currentSpeed < maxSpeed) {
 					currentSpeed = initialSpeed + cameraPosition.y * speedIncrement;
 				}
-
 			}
+
+			//moving background
+			backgroundFieldPosition.y = -(cameraPosition.y/backgroundSlowDown);
+			backgroundField.transform.localPosition = backgroundFieldPosition;
 
 			//update score label
 			score = Mathf.RoundToInt (cameraPosition.y);
@@ -559,13 +590,20 @@ public class Game_Script : MonoBehaviour {
 		//show player
 		player.SetActive (true);
 
-		//destroy all stage and tail
+		//destroy all stage
 		GameObject[] clones = GameObject.FindGameObjectsWithTag("Clone");
 		foreach (GameObject clone in clones) {
 			GameObject.Destroy(clone);
 		}
 
+		//destroy all background
+		clones = GameObject.FindGameObjectsWithTag("CloneBackground");
+		foreach (GameObject clone in clones) {
+			GameObject.Destroy(clone);
+		}
+
 		//return to initial position
+		backgroundField.transform.localPosition = Vector2.zero;
 		cameraObject.transform.position = cameraInitialPosition;
 		rigid.velocity = Vector2.zero;
 		player.transform.position = playerInitialPosition;
@@ -575,6 +613,9 @@ public class Game_Script : MonoBehaviour {
 		//instantiate stage 0
 		recentStageObject = (GameObject)Instantiate (stageInitialPrefab);
 		recentStageObject.transform.parent = stageField.transform;
+
+		//instantiate background 0
+		recentBackgroundObject = (GameObject)Instantiate (backgroundInitialPrefab,backgroundField.transform);
 
 		//reset UI
 		playUI.SetActive (false);
@@ -604,6 +645,14 @@ public class Game_Script : MonoBehaviour {
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
 			spawnStages ();
+		}
+
+
+		//transition
+		currentBackgroundTemplateNumber = 0;
+		//Background inital spawn
+		for (int i = 0; i < backgroundInitialCount; i++) {
+			spawnBackground ();
 		}
 
 		//score and coin value
@@ -701,6 +750,50 @@ public class Game_Script : MonoBehaviour {
 		spawnPosition.y = spawnPosition.y + (recentStageHeight + selectedPrefabHeight);
 		recentStageObject = (GameObject)Instantiate (selectedPrefab, spawnPosition, Quaternion.identity);
 		recentStageObject.transform.parent = stageField.transform;
+	}
+
+
+	public void spawnBackground(){
+
+		//else if reach last background
+		for (int i = 1; i <= backgroundTemplates.Length; i++) {
+			
+			if (i == backgroundTemplates.Length) { //if reach last distance
+
+				if (cameraPosition.y>=backgroundTemplates[i-1].distanceStart) { //check distance condition
+					if (currentBackgroundTemplateNumber != i-1) {
+						selectedBackgroundPrefab = backgroundTemplates[i-1].transition_prefabs; //select transition
+						currentBackgroundTemplateNumber = i-1;
+						print (currentBackgroundTemplateNumber);
+					}else{
+						selectedBackgroundPrefab = backgroundTemplates[i-1].background_prefabs; //select prefabs
+						break;
+					}
+				}
+
+
+			}else if (cameraPosition.y<backgroundTemplates[i].distanceStart) { //check distance condition
+				
+				if (currentBackgroundTemplateNumber != i-1) {
+					selectedBackgroundPrefab = backgroundTemplates[i-1].transition_prefabs; //select transition
+					currentBackgroundTemplateNumber = i-1;
+					print (currentBackgroundTemplateNumber);
+				}else{
+					selectedBackgroundPrefab = backgroundTemplates[i-1].background_prefabs; //select prefabs
+					break;
+				}
+					
+			}
+
+
+		}
+
+		selectedBackgroundPrefabHeight = selectedBackgroundPrefab.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * selectedBackgroundPrefab.transform.localScale.y;
+		recentBackgroundHeight = recentBackgroundObject.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * recentBackgroundObject.transform.localScale.y;
+		backgroundSpawnPosition = recentBackgroundObject.transform.position;
+		backgroundSpawnPosition.y = backgroundSpawnPosition.y + (recentBackgroundHeight + selectedBackgroundPrefabHeight);
+		recentBackgroundObject = (GameObject)Instantiate (selectedBackgroundPrefab, backgroundSpawnPosition, Quaternion.identity);
+		recentBackgroundObject.transform.parent = backgroundField.transform;
 	}
 
 	public void clickJump(int direction){
