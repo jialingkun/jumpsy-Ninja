@@ -43,7 +43,7 @@ public class Game_Script : MonoBehaviour {
 	//shop UI
 	private GameObject shopUI;
 	private GameObject notEnoughUI;
-	private GameObject wantToBuyUI;
+	//private GameObject wantToBuyUI;
 	private GameObject afterAdsUI;
 
 
@@ -53,6 +53,7 @@ public class Game_Script : MonoBehaviour {
 
 	//jump
 	private GameObject player;
+	private TrailRenderer trail;
 	private Transform targetRange;
 	private Transform BounceRange;
 	private Rigidbody2D rigid;
@@ -198,7 +199,7 @@ public class Game_Script : MonoBehaviour {
 		//shopUI
 		shopUI = GameObject.Find ("Shop");
 		notEnoughUI = GameObject.Find ("NotEnough");
-		wantToBuyUI = GameObject.Find ("WantToBuy");
+		//wantToBuyUI = GameObject.Find ("WantToBuy");
 		afterAdsUI = GameObject.Find ("AfterAds");
 
 		//revive
@@ -212,6 +213,7 @@ public class Game_Script : MonoBehaviour {
 		isGrounded = true;
 		//jump
 		player = GameObject.Find("Player");
+		trail = GameObject.Find("Trail").GetComponent<TrailRenderer>();
 		targetRange = GameObject.Find ("TargetRange").transform;
 		BounceRange = GameObject.Find ("BounceRange").transform;
 		rigid = player.GetComponent<Rigidbody2D>();
@@ -326,6 +328,8 @@ public class Game_Script : MonoBehaviour {
 				tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (false);
 				tempCharacterObject.transform.Find ("Purchase/Price").GetComponent<Text> ().text = ""+characters [i].price;
 			}
+
+			tempCharacterObject.transform.Find ("ConfirmBuy").gameObject.SetActive (false);
 		}
 		// change player sprite
 		player.GetComponent<SpriteRenderer> ().sprite = characters [selectedCharacter].image;
@@ -344,7 +348,7 @@ public class Game_Script : MonoBehaviour {
 		//shop UI
 		shopUI.SetActive (false);
 		notEnoughUI.SetActive (false);
-		wantToBuyUI.SetActive (false);
+		//wantToBuyUI.SetActive (false);
 		afterAdsUI.SetActive (false);
 
 	}
@@ -469,15 +473,17 @@ public class Game_Script : MonoBehaviour {
 					clickCloseHowTo();
 				} else if (notEnoughUI.activeSelf) {
 					clickExitNotEnough ();
-				} else if (wantToBuyUI.activeSelf) {
-					clickExitWantToBuy ();
-				} else if (shopUI.activeSelf) {
+				}else if (shopUI.activeSelf) {
 					clickExitShop ();
 				} else if (quitUI.activeSelf) {
 					quitUI.SetActive (false);
 				} else {
 					quitUI.SetActive (true);
 				}
+
+				/*else if (wantToBuyUI.activeSelf) {
+					clickExitWantToBuy ();
+				}*/ 
 
 			} 
 		}
@@ -608,7 +614,7 @@ public class Game_Script : MonoBehaviour {
 		rigid.velocity = Vector2.zero;
 		player.transform.position = playerInitialPosition;
 		//don't draw trail when going back
-		player.GetComponent<TrailRenderer>().Clear();
+		trail.Clear();
 
 		//instantiate stage 0
 		recentStageObject = (GameObject)Instantiate (stageInitialPrefab);
@@ -723,7 +729,7 @@ public class Game_Script : MonoBehaviour {
 		rigid.velocity = Vector2.zero;
 		player.transform.position = GameObject.Find("PlayerRevivePosition").transform.position;
 		//don't draw trail when going back
-		player.GetComponent<TrailRenderer>().Clear();
+		trail.Clear();
 	}
 
 
@@ -1058,12 +1064,21 @@ public class Game_Script : MonoBehaviour {
 	public void clickExitShop(){
 		playSelectSound ();
 		shopUI.SetActive (false);
+
+		//remove Confirm dialog
+		transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + buyIndexCharacter + "/ConfirmBuy").gameObject.SetActive (false);
 	}
 
 	public void clickBuy(int indexCharacter){
 		playSelectSound ();
+
+		//remove other Confirm dialog
+		transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + buyIndexCharacter + "/ConfirmBuy").gameObject.SetActive (false);
+
 		if (collectedCoin >= characters [indexCharacter].price) {
-			wantToBuyUI.SetActive (true);
+			//wantToBuyUI.SetActive (true); //old way
+			//display confirm dialog
+			transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + indexCharacter + "/ConfirmBuy").gameObject.SetActive (true);
 			buyIndexCharacter = indexCharacter;
 		} else {
 			notEnoughUI.SetActive (true);
@@ -1071,7 +1086,11 @@ public class Game_Script : MonoBehaviour {
 	}
 
 	public void ClickConfirmBuy(){
-		clickExitWantToBuy ();
+		//clickExitWantToBuy ();
+
+		//remove Confirm dialog
+		transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + buyIndexCharacter + "/ConfirmBuy").gameObject.SetActive (false);
+
 		//Use recent bought character
 		clickUseCharacter (buyIndexCharacter);
 
@@ -1097,6 +1116,9 @@ public class Game_Script : MonoBehaviour {
 		tempCharacterObject.transform.Find ("UsedLabel").gameObject.SetActive (false);
 		tempCharacterObject.transform.Find ("UseButton").gameObject.SetActive (true);
 
+		//remove Confirm dialog
+		transform.Find ("Shop/Panel/ScrollView/Viewport/Content/Character" + buyIndexCharacter + "/ConfirmBuy").gameObject.SetActive (false);
+
 		//change parameter
 		selectedCharacter = indexCharacter;
 		PlayerPrefs.SetInt("selectedCharacter",selectedCharacter);
@@ -1112,10 +1134,10 @@ public class Game_Script : MonoBehaviour {
 		afterAdsUI.SetActive (false);
 	}
 
-	public void clickExitWantToBuy(){
+	/*public void clickExitWantToBuy(){
 		playSelectSound ();
 		wantToBuyUI.SetActive (false);
-	}
+	}*/
 
 	public void adsCoinReward(int rewardAmount){
 		//collected coin
