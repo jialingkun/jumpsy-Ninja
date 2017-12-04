@@ -1019,6 +1019,7 @@ public class Game_Script : MonoBehaviour {
 
 	public void clickHowTo(){
 		playSelectSound ();
+		menuUI.SetActive (false);
 		howtoUI.SetActive (true);
 	}
 
@@ -1027,6 +1028,7 @@ public class Game_Script : MonoBehaviour {
 			PlayerPrefs.SetInt ("firstTime", 2);
 			clickStart ();
 		} else {
+			menuUI.SetActive (true);
 			playSelectSound ();
 		}
 		howtoUI.SetActive (false);
