@@ -31,6 +31,9 @@ public class Player_Script : MonoBehaviour {
 		if (coll.name.StartsWith ("Coin")) {
 			Destroy (coll.gameObject);
 			game.getCoin ();
+		} else if (coll.name.StartsWith ("PowerUpBarrier")) {
+			Destroy (coll.gameObject);
+			game.getPowerUpBarrier();
 		} else if (coll.name.StartsWith ("Platform")) {
 			game.groundCheck ();
 		} else if (coll.name.StartsWith ("WeakPlatform")) {
@@ -40,7 +43,9 @@ public class Player_Script : MonoBehaviour {
 				coll.GetComponent<Animator> ().SetTrigger ("stepped");
 				game.platformBounce ();
 			}
-		} else if (coll.tag == "Enemy"){
+		} else if (coll.tag == "Enemy" && game.currentBarrierLifespan<=0) {
+			game.gameover ();
+		} else if (coll.tag == "InvicibleEnemy") {
 			game.gameover ();
 		}
 	}

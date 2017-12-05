@@ -160,6 +160,14 @@ public class Game_Script : MonoBehaviour {
 	private bool isOnWeak;
 	private GameObject weakPlatform;
 
+	//Barrier
+	private GameObject barrier;
+	private Animator barrierAnimator;
+
+	public int barrierLifespan;
+	[HideInInspector]
+	public int currentBarrierLifespan;
+
 	//animation prefab
 	public GameObject playerExplodePrefab;
 	public GameObject wallBreakPrefab;
@@ -301,6 +309,12 @@ public class Game_Script : MonoBehaviour {
 
 		//weak platform
 		isOnWeak = false;
+
+		//Barrier
+		barrier = GameObject.Find ("Barrier");
+		barrierAnimator = barrier.GetComponent<Animator> ();
+		barrier.SetActive (false);
+		currentBarrierLifespan = 0;
 
 
 		selectedCharacter = PlayerPrefs.GetInt("selectedCharacter",0);
@@ -672,6 +686,10 @@ public class Game_Script : MonoBehaviour {
 
 		//weak platform
 		isOnWeak = false;
+
+		//barrier
+		barrierAnimator.SetBool ("weak", false);
+		barrier.SetActive (false);
 	}
 
 	public void refreshRevive(){
@@ -861,14 +879,33 @@ public class Game_Script : MonoBehaviour {
 	}
 
 	public bool groundCheck(){
-		if (rigid.velocity.y <= 0) {
+		if (rigid.velocity.y <= 0 && !isGrounded) {
 			isGrounded = true;
+
+			//barrier
+			if (currentBarrierLifespan>0) {
+				currentBarrierLifespan--;
+				print (currentBarrierLifespan);
+				if (currentBarrierLifespan<=0) {
+					barrierAnimator.SetBool ("weak", false);
+					barrier.SetActive (false);
+				}else if (currentBarrierLifespan==3) {
+					barrierAnimator.SetBool ("weak", true);
+				}
+			}
+
 		}
 		return isGrounded;
 	}
 
 	public void getCoin(){
 		isGettingCoin = true;
+	}
+
+	public void getPowerUpBarrier(){
+		barrier.SetActive (true);
+		barrierAnimator.SetBool ("weak", false);
+		currentBarrierLifespan = barrierLifespan;
 	}
 
 
