@@ -18,12 +18,14 @@ public class Player_Script : MonoBehaviour {
 			game.wallBounce (-1); //bounce left
 		} else if (coll.gameObject.name.StartsWith ("WeakWallLeft")) {
 			game.wallBounce (1); //bounce right
-			Destroy(coll.transform.parent.gameObject);
 			GameObject.Instantiate (game.wallBreakPrefab, coll.transform.position, Quaternion.Euler(new Vector3(0,180,0)));
+			Destroy(coll.transform.parent.gameObject);
+
 		} else if (coll.gameObject.name.StartsWith ("WeakWallRight")) {
 			game.wallBounce (-1); //bounce left
-			Destroy(coll.transform.parent.gameObject);
 			GameObject.Instantiate (game.wallBreakPrefab, coll.transform.position, Quaternion.identity);
+			Destroy(coll.transform.parent.gameObject);
+
 		}
 	}
 

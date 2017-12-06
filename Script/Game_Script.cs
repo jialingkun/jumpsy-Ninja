@@ -172,6 +172,8 @@ public class Game_Script : MonoBehaviour {
 	public GameObject playerExplodePrefab;
 	public GameObject wallBreakPrefab;
 	public GameObject platformBreakPrefab;
+	public GameObject shurikenDestroyPrefab;
+	public GameObject spikeDestroyPrefab;
 
 
 
@@ -688,7 +690,9 @@ public class Game_Script : MonoBehaviour {
 		isOnWeak = false;
 
 		//barrier
-		barrierAnimator.SetBool ("weak", false);
+		if (barrier.activeSelf) {
+			barrierAnimator.SetBool ("weak", false);
+		}
 		barrier.SetActive (false);
 	}
 
