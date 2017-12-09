@@ -13,6 +13,9 @@ public class Shuriken_Script : MonoBehaviour {
 		pointLeft = this.transform.Find ("PointLeft").position;
 		pointRight = this.transform.Find ("PointRight").position;
 		this.GetComponent<Rigidbody2D> ().velocity = new Vector2 (direction * velocitySpeed, 0);
+		if (direction == -1) {
+			this.GetComponent<Animator> ().SetBool ("reverse", true);
+		}
 	}
 
 	// Update is called once per frame
