@@ -14,7 +14,7 @@ public class DestroyLine_Script : MonoBehaviour {
 			game.spawnStages();
 			Destroy (coll.gameObject);
 		} else if (coll.name.StartsWith ("Background")) {
-			game.spawnBackground();
+			game.spawnBackground(3);
 			Destroy (coll.gameObject);
 		}
 	}

@@ -117,12 +117,13 @@ public class Game_Script : MonoBehaviour {
 	public float backgroundSlowDown;
 	//background
 	public GameObject backgroundInitialPrefab;
-	public Background_Templates[] backgroundTemplates;
+	//public Background_Templates[] backgroundTemplates;
+	public Background_Templates[] backgroundTransition;
 	public int backgroundInitialCount;
 	private GameObject recentBackgroundObject;
 	private float recentBackgroundHeight;
 	//transition parameter
-	private int currentBackgroundTemplateNumber;
+	//private int currentBackgroundTemplateNumber;
 	//random prefabs to spawn
 	private GameObject selectedBackgroundPrefab;
 	private float selectedBackgroundPrefabHeight;
@@ -276,10 +277,10 @@ public class Game_Script : MonoBehaviour {
 		backgroundFieldPosition = backgroundField.transform.position;
 		recentBackgroundObject = GameObject.Find("Background0");
 		//transition
-		currentBackgroundTemplateNumber = 0;
+		//currentBackgroundTemplateNumber = 0;
 		//Background inital spawn
 		for (int i = 0; i < backgroundInitialCount; i++) {
-			spawnBackground ();
+			spawnBackground (i);
 		}
 
 
@@ -671,10 +672,10 @@ public class Game_Script : MonoBehaviour {
 
 
 		//transition
-		currentBackgroundTemplateNumber = 0;
+		//currentBackgroundTemplateNumber = 0;
 		//Background inital spawn
 		for (int i = 0; i < backgroundInitialCount; i++) {
-			spawnBackground ();
+			spawnBackground (i);
 		}
 
 		//score and coin value
@@ -780,8 +781,21 @@ public class Game_Script : MonoBehaviour {
 		recentStageObject.transform.parent = stageField.transform;
 	}
 
+	public void spawnBackground(int index){
+		
+		selectedBackgroundPrefab = backgroundTransition[index].background_prefabs; //select prefabs
 
-	public void spawnBackground(){
+
+		selectedBackgroundPrefabHeight = selectedBackgroundPrefab.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * selectedBackgroundPrefab.transform.localScale.y;
+		recentBackgroundHeight = recentBackgroundObject.GetComponent<SpriteRenderer> ().sprite.bounds.extents.y * recentBackgroundObject.transform.localScale.y;
+		backgroundSpawnPosition = recentBackgroundObject.transform.position;
+		backgroundSpawnPosition.y = backgroundSpawnPosition.y + (recentBackgroundHeight + selectedBackgroundPrefabHeight);
+		recentBackgroundObject = (GameObject)Instantiate (selectedBackgroundPrefab, backgroundSpawnPosition, Quaternion.identity);
+		recentBackgroundObject.transform.parent = backgroundField.transform;
+	}
+
+
+	/*public void spawnBackground(){
 
 		//else if reach last background
 		for (int i = 1; i <= backgroundTemplates.Length; i++) {
@@ -822,7 +836,7 @@ public class Game_Script : MonoBehaviour {
 		backgroundSpawnPosition.y = backgroundSpawnPosition.y + (recentBackgroundHeight + selectedBackgroundPrefabHeight);
 		recentBackgroundObject = (GameObject)Instantiate (selectedBackgroundPrefab, backgroundSpawnPosition, Quaternion.identity);
 		recentBackgroundObject.transform.parent = backgroundField.transform;
-	}
+	}*/
 
 	public void clickJump(int direction){
 		//direction -1 left, 1 right
