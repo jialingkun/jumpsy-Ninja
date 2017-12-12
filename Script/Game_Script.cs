@@ -18,6 +18,7 @@ public class Game_Script : MonoBehaviour {
 	public AudioClip eatSound;
 	public AudioClip jumpSound;
 	public AudioClip deathSound;
+	public AudioClip powerupSound;
 	private AudioSource BGMaudioSource;
 	private AudioSource SEaudioSource;
 	//mute
@@ -182,7 +183,7 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//PlayerPrefs.DeleteAll ();
+		//oundPlayerPrefs.DeleteAll ();
 
 
 		//splash
@@ -921,6 +922,7 @@ public class Game_Script : MonoBehaviour {
 	}
 
 	public void getPowerUpBarrier(){
+		SEaudioSource.PlayOneShot (powerupSound, 0.6f);
 		barrier.SetActive (true);
 		barrierAnimator.SetBool ("weak", false);
 		currentBarrierLifespan = barrierLifespan;

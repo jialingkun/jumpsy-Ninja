@@ -182,7 +182,7 @@ public class Ads : MonoBehaviour {
 			//Debug.Log("Video completed - Offer a reward to the player");
 			if (freeCoinReward) {
 				freeCoinReward = false;
-				gameScript.adsCoinReward (100);
+				gameScript.adsCoinReward (300);
 			} else {
 				gameScript.refreshRevive();
 			}
