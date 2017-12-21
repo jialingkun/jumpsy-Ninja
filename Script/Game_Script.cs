@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.IO;
+using GooglePlayGames;
+using UnityEngine.SocialPlatforms;
 
 public class Game_Script : MonoBehaviour {
 	//splash screen
@@ -12,6 +14,9 @@ public class Game_Script : MonoBehaviour {
 
 	//ads component
 	private Ads ads;
+
+	//leaderboard
+	private string leaderboardID = "CgkI2-3qqN8XEAIQAQ";
 
 	//Audio
 	public AudioClip selectSound;
@@ -37,6 +42,7 @@ public class Game_Script : MonoBehaviour {
 	private GameObject menuUI;
 	private GameObject howtoUI;
 	private GameObject playUI;
+	private GameObject tutorialUI;
 	private GameObject gameoverUI;
 	private GameObject reviveUI;
 	private GameObject pauseUI;
@@ -46,6 +52,12 @@ public class Game_Script : MonoBehaviour {
 	private GameObject notEnoughUI;
 	//private GameObject wantToBuyUI;
 	private GameObject afterAdsUI;
+
+	//tutorial
+	private GameObject tutorialControl;
+	private GameObject tutorialLeft;
+	private GameObject tutorialRight;
+	public GameObject stageTutorialPrefab;
 
 
 	//start parameter
@@ -183,8 +195,10 @@ public class Game_Script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//oundPlayerPrefs.DeleteAll ();
+		//PlayerPrefs.DeleteAll ();
 
+		// Activate the Google Play Games platform
+		PlayGamesPlatform.Activate ();
 
 		//splash
 		splashUI = GameObject.Find ("SplashScreen");
@@ -213,6 +227,12 @@ public class Game_Script : MonoBehaviour {
 		notEnoughUI = GameObject.Find ("NotEnough");
 		//wantToBuyUI = GameObject.Find ("WantToBuy");
 		afterAdsUI = GameObject.Find ("AfterAds");
+
+		//Tutorial
+		tutorialUI = GameObject.Find ("Tutorial");
+		tutorialControl = GameObject.Find ("TutorialControl");
+		tutorialLeft = GameObject.Find ("TutorialLeft");
+		tutorialRight = GameObject.Find ("TutorialRight");
 
 		//revive
 		reviveButton = GameObject.Find ("Revive");
@@ -266,6 +286,16 @@ public class Game_Script : MonoBehaviour {
 		//stages spawn initialize
 		prefabsToRand = new List<GameObject>();
 		recentStageObject = GameObject.Find("Stage0");
+
+
+		//tutorial stage spawn
+		if (PlayerPrefs.GetInt ("firstTime", 0) <= 1) {
+			selectedPrefab = stageTutorialPrefab;
+			spawnPosition = recentStageObject.transform.position;
+			Destroy (recentStageObject); //destroy stage 0
+			recentStageObject = (GameObject)Instantiate (selectedPrefab, spawnPosition, Quaternion.identity);
+			recentStageObject.transform.parent = stageField.transform;
+		}
 
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
@@ -358,7 +388,7 @@ public class Game_Script : MonoBehaviour {
 
 		//Hide UI
 		howtoUI.SetActive (false);
-		//tutorialUI.SetActive (false);
+		tutorialUI.SetActive (false);
 		playUI.SetActive (false);
 		gameoverUI.SetActive (false);
 		pauseUI.SetActive (false);
@@ -375,8 +405,7 @@ public class Game_Script : MonoBehaviour {
 	private void FadeInSplash(){
 		panelImage.CrossFadeAlpha(0.0f, 1.0f, false); //(alpha value, fade speed, not important)
 
-		//GooglePlayLogIn (); //start login when splash screen show
-		StartCoroutine(FadeOutSplash()); //temporary, without google play login
+		GooglePlayLogIn (); //start login when splash screen show
 
 	}
 
@@ -508,6 +537,31 @@ public class Game_Script : MonoBehaviour {
 		
 	}
 
+
+	//leaderboard
+	public void ClickShowLeaderBoard ()
+	{
+		//        Social.ShowLeaderboardUI (); // Show all leaderboard
+		((PlayGamesPlatform)Social.Active).ShowLeaderboardUI (leaderboardID); // Show current (Active) leaderboard
+	}
+
+	private void addScoreToLeaderBoard (int score)
+	{
+		if (Social.localUser.authenticated) {
+			Social.ReportScore (score, leaderboardID, (bool success) =>
+				{
+					if (success) {
+						Debug.Log ("Update Score Success");
+
+					} else {
+						Debug.Log ("Update Score Fail");
+					}
+				});
+		}
+	}
+
+
+
 	IEnumerator Shake() {
 		Vector3 originalCamPos = cameraObject.transform.position;
 		Vector3 temporaryCamPos = new Vector3(0, 0, originalCamPos.z);
@@ -580,7 +634,7 @@ public class Game_Script : MonoBehaviour {
 
 
 			ads.addInterstitialCounter ();
-			//addScoreToLeaderBoard (bestscore);
+			addScoreToLeaderBoard (score);
 		}
 	}
 
@@ -590,6 +644,11 @@ public class Game_Script : MonoBehaviour {
 		if (PlayerPrefs.GetInt ("firstTime", 0) <= 0) {
 			PlayerPrefs.SetInt ("firstTime", 1);
 			clickHowTo ();
+		} else if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
+			playSelectSound ();
+			tutorialUI.SetActive (true);
+			TutorialTurnLeftInstruction ();
+			isPlaying = true;
 		} else {
 			playSelectSound ();
 			playUI.SetActive (true);
@@ -597,6 +656,71 @@ public class Game_Script : MonoBehaviour {
 		}
 
 
+	}
+
+	public void tutorialClickJump(int direction){
+		//direction -1 left, 1 right
+
+		if (isGrounded) {
+			//sound
+			SEaudioSource.PlayOneShot (jumpSound, 0.6f);
+
+			//parabola jump algorithm
+			targetPosition = targetRange.position;
+
+			// Positions of this object and the target on the same plane
+			planarTarget.x = targetPosition.x;
+			planarPosition.x = player.transform.position.x;
+
+			// Planar distance between objects
+			planarDistance = Vector2.Distance(planarTarget, planarPosition);
+
+			// Distance along the y axis between objects
+			yOffset = player.transform.position.y - targetPosition.y;
+
+			initialVelocity = (1 / Mathf.Cos(angle)) * Mathf.Sqrt((0.5f * gravity * Mathf.Pow(planarDistance, 2)) / (planarDistance * Mathf.Tan(angle) + yOffset));
+
+			velocity.x = initialVelocity * Mathf.Cos (angle) * direction; //direction -1 left, 1 right
+			velocity.y = initialVelocity * Mathf.Sin (angle) * 1; // 1 up
+
+
+
+			//point change
+			currentPoint = currentPoint + direction;
+			isStopped = false;
+
+
+			//execute jump
+			rigid.velocity = velocity;
+			isGrounded = false;
+
+			//update direction
+			if (lastDirection != direction) {
+				player.transform.Rotate (headRotate);
+				//update last direction
+				lastDirection = direction;
+			}
+				
+		}
+	}
+
+	public void TutorialTurnLeftInstruction(){
+		tutorialControl.SetActive (true);
+		tutorialLeft.SetActive (true);
+		tutorialRight.SetActive (false);
+	}
+
+	public void TutorialTurnRightInstruction(){
+		tutorialControl.SetActive (true);
+		tutorialLeft.SetActive (false);
+		tutorialRight.SetActive (true);
+	}
+
+	public void TutorialEnd(){
+		playSelectSound ();
+		PlayerPrefs.SetInt ("firstTime", 2);
+		tutorialUI.SetActive (false);
+		playUI.SetActive (true);
 	}
 
 	public void clickRestart(){
@@ -666,10 +790,20 @@ public class Game_Script : MonoBehaviour {
 		firstJump = false;
 		currentSpeed = initialSpeed;
 
+		//tutorial stage spawn
+		if (PlayerPrefs.GetInt ("firstTime", 0) <= 1) {
+			selectedPrefab = stageTutorialPrefab;
+			spawnPosition = recentStageObject.transform.position;
+			Destroy (recentStageObject); //destroy stage 0
+			recentStageObject = (GameObject)Instantiate (selectedPrefab, spawnPosition, Quaternion.identity);
+			recentStageObject.transform.parent = stageField.transform;
+		}
+
 		//stages inital spawn
 		for (int i = 0; i < stagesInitialCount; i++) {
 			spawnStages ();
 		}
+
 
 
 		//transition
@@ -1030,8 +1164,8 @@ public class Game_Script : MonoBehaviour {
 		{
 			//if UNITY_ANDROID
 			string body = "Can you beat my best score?\n" +
-				"https://play.google.com/store/apps/details?id=com.bekko.SnuckySnake";
-			string subject = "Snucky Snake score";
+				"https://play.google.com/store/apps/details?id=com.bekko.highleapninja";
+			string subject = "High Leap Ninja score";
 
 			AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
 			AndroidJavaObject intentObject = new AndroidJavaObject("android.content.Intent");
@@ -1060,6 +1194,7 @@ public class Game_Script : MonoBehaviour {
 	public void clickExit(){
 		playSelectSound ();
 		menuUI.SetActive (true);
+		tutorialUI.SetActive (false);
 
 		//resume physic
 		pauseUI.SetActive (false);
@@ -1088,7 +1223,6 @@ public class Game_Script : MonoBehaviour {
 
 	public void clickCloseHowTo(){
 		if (PlayerPrefs.GetInt ("firstTime", 0) == 1) {
-			PlayerPrefs.SetInt ("firstTime", 2);
 			clickStart ();
 		} else {
 			menuUI.SetActive (true);

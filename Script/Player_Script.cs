@@ -36,6 +36,10 @@ public class Player_Script : MonoBehaviour {
 		} else if (coll.name.StartsWith ("PowerUpBarrier")) {
 			Destroy (coll.gameObject);
 			game.getPowerUpBarrier();
+		} else if (coll.name.StartsWith ("RightTutorialPoint")) {
+			game.TutorialTurnRightInstruction ();
+		} else if (coll.name.StartsWith ("EndTutorialPoint")) {
+			game.TutorialEnd ();
 		} else if (coll.name.StartsWith ("Platform")) {
 			game.groundCheck ();
 		} else if (coll.name.StartsWith ("WeakPlatform")) {
