@@ -25,6 +25,8 @@ public class Player_Script : MonoBehaviour {
 			game.wallBounce (-1); //bounce left
 			GameObject.Instantiate (game.wallBreakPrefab, coll.transform.position, Quaternion.identity);
 			Destroy(coll.transform.parent.gameObject);
+		} else if (coll.gameObject.name.StartsWith ("Platform")) {
+			game.groundCheck ();
 
 		}
 	}

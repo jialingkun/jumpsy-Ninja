@@ -462,11 +462,11 @@ public class Game_Script : MonoBehaviour {
 			}
 
 			//temporary keyboard control
-			if (Input.GetKey (KeyCode.RightArrow)) {
+			/*if (Input.GetKey (KeyCode.RightArrow)) {
 				clickJump (1);
 			} else if (Input.GetKey (KeyCode.LeftArrow)) {
 				clickJump (-1);
-			}
+			}*/
 			//stopping point
 			if (currentPoint >= 0 && currentPoint <= 4) {
 				if (Mathf.Abs (player.transform.position.x - point [currentPoint]) < 0.05f && !isStopped) {
@@ -1038,7 +1038,6 @@ public class Game_Script : MonoBehaviour {
 			//barrier
 			if (currentBarrierLifespan>0) {
 				currentBarrierLifespan--;
-				print (currentBarrierLifespan);
 				if (currentBarrierLifespan<=0) {
 					barrierAnimator.SetBool ("weak", false);
 					barrier.SetActive (false);
