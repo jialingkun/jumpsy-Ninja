@@ -1289,7 +1289,7 @@ public class Game_Script : MonoBehaviour {
 		PlayerPrefs.SetInt ("purchaseCharacter" + buyIndexCharacter, 1);
 		//pay food
 		collectedCoin = collectedCoin - characters [buyIndexCharacter].price;
-		PlayerPrefs.SetInt ("collectedCoin", collectedCoin);
+		PlayerPrefs.SetInt ("coin", collectedCoin);
 		gameplayCoinText.text = "" + collectedCoin;
 		shopCoinText.text = "" + collectedCoin;
 	}
